@@ -1,0 +1,26 @@
+
+# config/config.yaml
+rds:
+  access_key: "XX"
+  access_secret: "xx"
+  region: "cn-hangzhou"
+  instances:
+    vnnox-uat: "rm-bp11p2eu53e95lr1m"
+    vnnox-cn-db: "rm-bp1xn3t59czt61603"
+    vnnox-sg-db: "rm-t4n7fdapio4fa8afc"
+    care-eu-db: "rm-gw8p91py2a9l6zmw3"
+    vnnox-eu-db: "rm-gw856wli569ql92w7"
+    care-us-db: "rm-rj9z401jq58lm0od2"
+    vnnox-us-db: "rm-rj934t1rmdn12j04m"
+  aws:
+    access_key: "your_aws_access_key"
+    secret_key: "your_aws_secret_key"
+    region: "us-west-2"
+    instances:
+      dev: "aws_rds_instance_id_for_dev"
+      prod: "aws_rds_instance_id_for_prod"
+    export_task:
+      kms_key_id: "your_kms_key_id"
+      s3_bucket_name: "your_s3_bucket_name"
+      iam_role_arn: "your_iam_role_arn"
+      export_task_identifier_prefix: "export-task-"
