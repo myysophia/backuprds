@@ -12,15 +12,11 @@ type Config struct {
 		Aliyun struct {
 			AccessKey    string            `yaml:"access_key"`
 			AccessSecret string            `yaml:"access_secret"`
-			Region       string            `yaml:"region"`
-			Instances    map[string]string `yaml:"instances"`
+			Instances    map[string]InstanceConfig `yaml:"instances"`
 		} `yaml:"aliyun"`
 		Aws struct {
-			AccessKey  string            `yaml:"access_key"`
-			SecretKey  string            `yaml:"secret_key"`
-			Region     string            `yaml:"region"`
-			Instances  map[string]string `yaml:"instances"`
-			ExportTask struct {
+			Instances   map[string]InstanceConfig `yaml:"instances"`
+			ExportTask  struct {
 				KmsKeyId                   string `yaml:"kms_key_id"`
 				S3BucketName               string `yaml:"s3_bucket_name"`
 				IamRoleArn                 string `yaml:"iam_role_arn"`
@@ -28,6 +24,11 @@ type Config struct {
 			} `yaml:"export_task"`
 		} `yaml:"aws"`
 	} `yaml:"rds"`
+}
+
+type InstanceConfig struct {
+	ID     string `yaml:"id"`
+	Region string `yaml:"region"`
 }
 
 var configs Config

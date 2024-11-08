@@ -2,14 +2,14 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"time"
 )
 
 const (
-	maxRetries = 5
+	maxRetries = 1
 	retryDelay = 2 * time.Second
 )
 
@@ -30,7 +30,7 @@ func backupHandler(c *gin.Context) {
 	var lastErr error
 
 	for i := 0; i < maxRetries; i++ {
-		backupURLs, err = getLastBackupURLs(instanceID)
+		backupURLs, err = getLastBackupURLs(instanceID.ID)
 		if err != nil {
 			lastErr = err
 			time.Sleep(retryDelay)
@@ -74,23 +74,35 @@ func backupHandler(c *gin.Context) {
 func awsBackupHandler(c *gin.Context) {
 	env := c.Param("env")
 
-	// 获取实例 ID
-	instanceID, ok := configs.RDS.Aws.Instances[env]
+	// 获取实例配置
+	instanceConfig, ok := configs.RDS.Aws.Instances[env]
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
 		return
 	}
 
+	log.Printf("Fetching snapshots for instance: %s in region: %s", instanceConfig.ID, instanceConfig.Region)
+
 	// 获取最新快照信息
-	snapshotInfo, err := getLatestSnapshotInfo(instanceID)
+	snapshotInfo, err := getLatestSnapshotInfo(instanceConfig.ID, instanceConfig.Region)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get snapshot info", "details": err.Error()})
+		log.Printf("Error getting snapshot info: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":      "failed to get snapshot info",
+			"details":    err.Error(),
+			"instanceId": instanceConfig.ID,
+			"region":     instanceConfig.Region,
+		})
 		return
 	}
 
 	// 检查是否找到快照
 	if snapshotInfo["SnapshotArn"] == "" {
-		c.JSON(http.StatusNotFound, gin.H{"message": "no snapshots found"})
+		c.JSON(http.StatusNotFound, gin.H{
+			"message":    "no snapshots found",
+			"instanceId": instanceConfig.ID,
+			"region":     instanceConfig.Region,
+		})
 		return
 	}
 
@@ -98,6 +110,10 @@ func awsBackupHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"snapshot_create_time": snapshotInfo["SnapshotCreateTime"],
 		"snapshot_arn":         snapshotInfo["SnapshotArn"],
+		"snapshot_id":          snapshotInfo["SnapshotId"],
+		"status":               snapshotInfo["Status"],
+		"instance_id":          instanceConfig.ID,
+		"region":               instanceConfig.Region,
 	})
 }
 
@@ -105,26 +121,64 @@ func awsBackupHandler(c *gin.Context) {
 func awsExportHandler(c *gin.Context) {
 	env := c.Param("env")
 
-	// 获取实例 ID
-	instanceID, ok := configs.RDS.Aws.Instances[env]
+	// 获取实例配置
+	instanceConfig, ok := configs.RDS.Aws.Instances[env]
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
 		return
 	}
 
-	// 示例中，我们假设快照 ARN 是根据实例 ID 构造的，实际情况可能需要查询快照来获取 ARN
-	// 注意：此处的 snapshotArn 应该替换为您实际的快照 ARN
-	snapshotArn := fmt.Sprintf("arn:aws:rds:%s:account-id:snapshot:%s", configs.RDS.Aws.Region, instanceID)
+	log.Printf("Starting export task for instance: %s in region: %s", instanceConfig.ID, instanceConfig.Region)
+
+	// 先获取最新的快照信息
+	snapshotInfo, err := getLatestSnapshotInfo(instanceConfig.ID, instanceConfig.Region)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":      "failed to get snapshot info",
+			"details":    err.Error(),
+			"instanceId": instanceConfig.ID,
+			"region":     instanceConfig.Region,
+		})
+		return
+	}
+
+	// 检查是否找到快照
+	if snapshotInfo["SnapshotArn"] == "" {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message":    "no snapshots found",
+			"instanceId": instanceConfig.ID,
+			"region":     instanceConfig.Region,
+		})
+		return
+	}
 
 	// 启动快照导出任务
-	exportTaskID, err := startRDSSnapshotExport(instanceID, snapshotArn)
+	exportTaskID, err := startRDSSnapshotExport(
+		instanceConfig.ID,
+		snapshotInfo["SnapshotArn"],
+		instanceConfig.Region,
+		configs.RDS.Aws.ExportTask.IamRoleArn,
+		configs.RDS.Aws.ExportTask.KmsKeyId,
+		configs.RDS.Aws.ExportTask.S3BucketName,
+	)
+
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to start export task", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":      "failed to start export task",
+			"details":    err.Error(),
+			"instanceId": instanceConfig.ID,
+			"region":     instanceConfig.Region,
+		})
 		return
 	}
 
 	// 返回导出任务 ID
-	c.JSON(http.StatusOK, gin.H{"export_task_id": exportTaskID})
+	c.JSON(http.StatusOK, gin.H{
+		"export_task_id": exportTaskID,
+		"snapshot_arn":   snapshotInfo["SnapshotArn"],
+		"instance_id":    instanceConfig.ID,
+		"region":         instanceConfig.Region,
+	})
 }
 
 // healthCheckHandler 处理健康检查请求

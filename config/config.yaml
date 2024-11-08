@@ -1,27 +1,44 @@
-
 # config/config.yaml
 rds:
   aliyun:
-    access_key: "XX"
-    access_secret: "xx"
-    region: "cn-hangzhou"
     instances:
-      vnnox-uat: "rm-bp11p2eu53e95lr1m"
-      vnnox-cn-db: "rm-bp1xn3t59czt61603"
-      vnnox-sg-db: "rm-t4n7fdapio4fa8afc"
-      care-eu-db: "rm-gw8p91py2a9l6zmw3"
-      vnnox-eu-db: "rm-gw856wli569ql92w7"
-      care-us-db: "rm-rj9z401jq58lm0od2"
-      vnnox-us-db: "rm-rj934t1rmdn12j04m"
+      vnnox-uat:
+        id: "rm-bp11p2eu53e95lr1m"
+        region: "cn-hangzhou"
+      vnnox-cn-db:
+        id: "rm-bp1xn3t59czt61603"
+        region: "cn-hangzhou"
+      vnnox-sg-db:
+        id: "rm-t4n7fdapio4fa8afc"
+        region: "ap-southeast-1"
+      care-eu-db:
+        id: "rm-gw8p91py2a9l6zmw3"
+        region: "eu-central-1"
+      vnnox-eu-db:
+        id: "rm-gw856wli569ql92w7"
+        region: "eu-central-1"
+      care-us-db:
+        id: "rm-rj9z401jq58lm0od2"
+        region: "us-east-1"
+      vnnox-us-db:
+        id: "rm-rj934t1rmdn12j04m"
+        region: "us-east-1"
   aws:
-    access_key: "your_aws_access_key"
-    secret_key: "your_aws_secret_key"
-    region: "ap-southeast-2"
     instances:
-      dev: "aws_rds_instance_id_for_dev"
-      prod: "aws_rds_instance_id_for_prod"
+      au-mysql8-care:
+        id: "arn:aws:rds:ap-southeast-2:059012766390:db:mysql8-care"
+        region: "ap-southeast-2"
+      au-mysql8-vnnox:
+        id: "arn:aws:rds:ap-southeast-2:059012766390:db:mysql8-vnnox"
+        region: "ap-southeast-2"
+      in-care-mysql:
+        id: "arn:aws:rds:ap-south-1:059012766390:db:care-mysql-in"
+        region: "ap-south-1"
+      in-vnnox-mysql:
+        id: "arn:aws:rds:ap-south-1:059012766390:db:vnnox-in"
+        region: "ap-south-1"
     export_task:
       kms_key_id: "22584e80-f470-4c1a-9998-7e84cccf2b01"
       s3_bucket_name: "novacloud-devops"
-      iam_role_arn: " arn:aws:iam::059012766390:role/rds-s3-export-role"
+      iam_role_arn: "arn:aws:iam::059012766390:role/rds-s3-export-role"
       export_task_identifier_prefix: "snapshot-export"

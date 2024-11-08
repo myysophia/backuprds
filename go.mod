@@ -1,6 +1,8 @@
 module client
 
-go 1.20
+go 1.21
+
+toolchain go1.23.3
 
 require (
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.0.10
@@ -13,6 +15,8 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	gopkg.in/yaml.v2 v2.2.8
 )
+
+require github.com/aws/smithy-go v1.22.0 // indirect
 
 require (
 	github.com/alibabacloud-go/alibabacloud-gateway-spi v0.0.5 // indirect
@@ -32,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.32.4 // indirect
-	github.com/aws/smithy-go v1.22.0 // indirect
+	//github.com/aws/smithy-go v1.22.0 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/clbanning/mxj/v2 v2.5.5 // indirect
