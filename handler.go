@@ -18,7 +18,7 @@ func backupHandler(c *gin.Context) {
 	env := c.Param("env")
 
 	// 根据环境参数获取实例 ID
-	instanceID, ok := config.RDS.Instances[env]
+	instanceID, ok := configs.RDS.Aliyun.Instances[env]
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
 		return
@@ -71,12 +71,42 @@ func backupHandler(c *gin.Context) {
 	}
 }
 
+func awsBackupHandler(c *gin.Context) {
+	env := c.Param("env")
+
+	// 获取实例 ID
+	instanceID, ok := configs.RDS.Aws.Instances[env]
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
+		return
+	}
+
+	// 获取最新快照信息
+	snapshotInfo, err := getLatestSnapshotInfo(instanceID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get snapshot info", "details": err.Error()})
+		return
+	}
+
+	// 检查是否找到快照
+	if snapshotInfo["SnapshotArn"] == "" {
+		c.JSON(http.StatusNotFound, gin.H{"message": "no snapshots found"})
+		return
+	}
+
+	// 返回快照信息
+	c.JSON(http.StatusOK, gin.H{
+		"snapshot_create_time": snapshotInfo["SnapshotCreateTime"],
+		"snapshot_arn":         snapshotInfo["SnapshotArn"],
+	})
+}
+
 // awsExportHandler 启动 AWS RDS 快照的导出任务
 func awsExportHandler(c *gin.Context) {
 	env := c.Param("env")
 
 	// 获取实例 ID
-	instanceID, ok := config.RDS.Aws.Instances[env]
+	instanceID, ok := configs.RDS.Aws.Instances[env]
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
 		return
@@ -84,7 +114,7 @@ func awsExportHandler(c *gin.Context) {
 
 	// 示例中，我们假设快照 ARN 是根据实例 ID 构造的，实际情况可能需要查询快照来获取 ARN
 	// 注意：此处的 snapshotArn 应该替换为您实际的快照 ARN
-	snapshotArn := fmt.Sprintf("arn:aws:rds:%s:account-id:snapshot:%s", config.RDS.Aws.Region, instanceID)
+	snapshotArn := fmt.Sprintf("arn:aws:rds:%s:account-id:snapshot:%s", configs.RDS.Aws.Region, instanceID)
 
 	// 启动快照导出任务
 	exportTaskID, err := startRDSSnapshotExport(instanceID, snapshotArn)
