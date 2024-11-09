@@ -18,7 +18,6 @@ type Config struct {
 			Instances   map[string]InstanceConfig `yaml:"instances"`
 			ExportTask  struct {
 				S3BucketName  string `yaml:"s3_bucket_name"`
-				S3BucketRegion string `yaml:"s3_bucket_region"`
 				S3Prefix      string `yaml:"s3_prefix"`
 				IamRoleArn    string `yaml:"iam_role_arn"`
 			} `yaml:"export_task"`

@@ -154,14 +154,13 @@ func awsExportHandler(c *gin.Context) {
 
 	// 启动快照导出任务
 	exportTaskID, err := startRDSSnapshotExport(
-		instanceConfig.ID,
-		snapshotInfo["SnapshotArn"],
-		instanceConfig.Region,
-		configs.RDS.Aws.ExportTask.S3BucketRegion,
-		configs.RDS.Aws.ExportTask.IamRoleArn,
-		instanceConfig.KmsKeyId,
-		configs.RDS.Aws.ExportTask.S3BucketName,
-		configs.RDS.Aws.ExportTask.S3Prefix,
+			instanceConfig.ID,
+			snapshotInfo["SnapshotArn"],
+			instanceConfig.Region,
+			configs.RDS.Aws.ExportTask.IamRoleArn,
+			instanceConfig.KmsKeyId,
+			configs.RDS.Aws.ExportTask.S3BucketName,
+			configs.RDS.Aws.ExportTask.S3Prefix,
 	)
 	
 	if err != nil {
