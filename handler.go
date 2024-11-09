@@ -134,10 +134,10 @@ func awsExportHandler(c *gin.Context) {
 	snapshotInfo, err := getLatestSnapshotInfo(instanceConfig.ID, instanceConfig.Region)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to get snapshot info",
-			"details": err.Error(),
+			"error":      "failed to get snapshot info",
+			"details":    err.Error(),
 			"instanceId": instanceConfig.ID,
-			"region": instanceConfig.Region,
+			"region":     instanceConfig.Region,
 		})
 		return
 	}
@@ -145,30 +145,30 @@ func awsExportHandler(c *gin.Context) {
 	// 检查是否找到快照
 	if snapshotInfo["SnapshotArn"] == "" {
 		c.JSON(http.StatusNotFound, gin.H{
-			"message": "no snapshots found",
+			"message":    "no snapshots found",
 			"instanceId": instanceConfig.ID,
-			"region": instanceConfig.Region,
+			"region":     instanceConfig.Region,
 		})
 		return
 	}
 
 	// 启动快照导出任务
 	exportTaskID, err := startRDSSnapshotExport(
-			instanceConfig.ID,
-			snapshotInfo["SnapshotArn"],
-			instanceConfig.Region,
-			configs.RDS.Aws.ExportTask.IamRoleArn,
-			instanceConfig.KmsKeyId,
-			configs.RDS.Aws.ExportTask.S3BucketName,
-			configs.RDS.Aws.ExportTask.S3Prefix,
+		instanceConfig.ID,
+		snapshotInfo["SnapshotArn"],
+		instanceConfig.Region,
+		configs.RDS.Aws.ExportTask.IamRoleArn,
+		instanceConfig.KmsKeyId,
+		instanceConfig.S3BucketName,
+		configs.RDS.Aws.ExportTask.S3Prefix,
 	)
-	
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to start export task",
-			"details": err.Error(),
+			"error":      "failed to start export task",
+			"details":    err.Error(),
 			"instanceId": instanceConfig.ID,
-			"region": instanceConfig.Region,
+			"region":     instanceConfig.Region,
 		})
 		return
 	}
@@ -176,10 +176,11 @@ func awsExportHandler(c *gin.Context) {
 	// 返回导出任务 ID
 	c.JSON(http.StatusOK, gin.H{
 		"export_task_id": exportTaskID,
-		"snapshot_arn": snapshotInfo["SnapshotArn"],
-		"instance_id": instanceConfig.ID,
-		"region": instanceConfig.Region,
-		"kms_key_id": instanceConfig.KmsKeyId,
+		"snapshot_arn":   snapshotInfo["SnapshotArn"],
+		"instance_id":    instanceConfig.ID,
+		"region":         instanceConfig.Region,
+		"kms_key_id":     instanceConfig.KmsKeyId,
+		"s3_bucket_name": instanceConfig.S3BucketName,
 	})
 }
 
