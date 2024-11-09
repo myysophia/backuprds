@@ -4,15 +4,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"log"
 	"os"
+	"strings"
 	"time"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/rds"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 )
 
 // createAWSClient 创建 RDS 客户端
@@ -29,9 +29,9 @@ func createAWSClient(region string) (*rds.Client, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
-				accessKey,
-				secretKey,
-				"", // token可以为空
+			accessKey,
+			secretKey,
+			"", // token可以为空
 		)),
 	)
 	if err != nil {
@@ -49,23 +49,41 @@ func startRDSSnapshotExport(
 	iamRoleArn string,
 	kmsKeyId string,
 	s3BucketName string,
+	s3Prefix string,
 ) (string, error) {
 	client, err := createAWSClient(region)
 	if err != nil {
 		return "", fmt.Errorf("failed to create AWS RDS client: %v", err)
 	}
 
-	// 生成唯一的导出任务标识符
-	exportTaskIdentifier := fmt.Sprintf("export-%s-%s", 
-		instanceID, 
-		time.Now().Format("20060102-150405"))
+	// 截取实例ID的关键部分
+	shortInstanceID := instanceID
+	if len(instanceID) > 20 {
+		parts := strings.Split(instanceID, ":")
+		shortInstanceID = parts[len(parts)-1]
+		if len(shortInstanceID) > 20 {
+			shortInstanceID = shortInstanceID[len(shortInstanceID)-20:]
+		}
+	}
+
+	// 生成更短的导出任务标识符
+	exportTaskIdentifier := fmt.Sprintf("exp-%s-%s",
+		shortInstanceID,
+		time.Now().Format("0102-1504"))
+
+	// 构建完整的 S3 前缀路径
+	fullS3Prefix := s3Prefix
+	if s3Prefix != "" {
+		fullS3Prefix = strings.TrimSuffix(s3Prefix, "/") + "/"
+	}
 
 	input := &rds.StartExportTaskInput{
 		ExportTaskIdentifier: aws.String(exportTaskIdentifier),
-		IamRoleArn:          aws.String(iamRoleArn),
-		KmsKeyId:            aws.String(kmsKeyId),
-		S3BucketName:        aws.String(s3BucketName),
-		SourceArn:           aws.String(snapshotArn),
+		IamRoleArn:           aws.String(iamRoleArn),
+		KmsKeyId:             aws.String(kmsKeyId),
+		S3BucketName:         aws.String(s3BucketName),
+		S3Prefix:             aws.String(fullS3Prefix),
+		SourceArn:            aws.String(snapshotArn),
 	}
 
 	log.Printf("Starting export task with params: %+v", input)
@@ -88,10 +106,10 @@ func getLatestSnapshotInfo(instanceID string, region string) (map[string]string,
 	// 调用 DescribeDBSnapshots API，添加更多过滤条件
 	input := &rds.DescribeDBSnapshotsInput{
 		DBInstanceIdentifier: aws.String(instanceID),
-		SnapshotType:        aws.String("automated"), // 修改为 "automated" 获取自动快照
-		MaxRecords:          aws.Int32(20),          // 限制返回记录数
-		IncludeShared:       aws.Bool(true),         // 包含共享快照
-		IncludePublic:       aws.Bool(true),         // 包含公共快照
+		SnapshotType:         aws.String("automated"), // 修改为 "automated" 获取自动快照
+		MaxRecords:           aws.Int32(20),           // 限制返回记录数
+		IncludeShared:        aws.Bool(true),          // 包含共享快照
+		IncludePublic:        aws.Bool(true),          // 包含公共快照
 	}
 
 	resp, err := client.DescribeDBSnapshots(context.TODO(), input)
@@ -106,8 +124,8 @@ func getLatestSnapshotInfo(instanceID string, region string) (map[string]string,
 	// 获取最新快照
 	var latestSnapshot *types.DBSnapshot
 	for i, snapshot := range resp.DBSnapshots {
-		log.Printf("Snapshot %d: ID=%s, Status=%s, Time=%s", 
-			i+1, 
+		log.Printf("Snapshot %d: ID=%s, Status=%s, Time=%s",
+			i+1,
 			aws.ToString(snapshot.DBSnapshotIdentifier),
 			aws.ToString(snapshot.Status),
 			snapshot.SnapshotCreateTime.String())

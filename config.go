@@ -17,10 +17,10 @@ type Config struct {
 		Aws struct {
 			Instances   map[string]InstanceConfig `yaml:"instances"`
 			ExportTask  struct {
-				KmsKeyId                   string `yaml:"kms_key_id"`
-				S3BucketName               string `yaml:"s3_bucket_name"`
-				IamRoleArn                 string `yaml:"iam_role_arn"`
-				ExportTaskIdentifierPrefix string `yaml:"export_task_identifier_prefix"`
+				S3BucketName  string `yaml:"s3_bucket_name"`
+				S3BucketRegion string `yaml:"s3_bucket_region"`
+				S3Prefix      string `yaml:"s3_prefix"`
+				IamRoleArn    string `yaml:"iam_role_arn"`
 			} `yaml:"export_task"`
 		} `yaml:"aws"`
 	} `yaml:"rds"`
@@ -29,6 +29,7 @@ type Config struct {
 type InstanceConfig struct {
 	ID     string `yaml:"id"`
 	Region string `yaml:"region"`
+	KmsKeyId string `yaml:"kms_key_id"`
 }
 
 var configs Config

@@ -2,18 +2,32 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Nova RDS 备份下载</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.15.1/antd.min.css">
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.15.1/antd.min.js"></script>
+    <title>Nova RDS 跨云灾备系统</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/antd/4.24.14/antd.min.css">
 </head>
 <body>
     <div id="root"></div>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/antd/4.24.14/antd.min.js"></script>
     <script>
-        const { Layout, Typography, Table, Input, Card, message, Spin } = antd;
+        console.log('Setting up antd components');
+        window.antdComponents = {
+            Layout: antd.Layout,
+            Header: antd.Layout.Header,
+            Content: antd.Layout.Content,
+            Typography: antd.Typography,
+            Title: antd.Typography.Title,
+            Table: antd.Table,
+            Input: antd.Input,
+            Search: antd.Input.Search,
+            Card: antd.Card,
+            message: antd.message,
+            Spin: antd.Spin,
+            Button: antd.Button
+        };
     </script>
     <script type="text/babel" src="/static/js/components/BackupList.js"></script>
     <script type="text/babel" src="/static/js/app.js"></script>

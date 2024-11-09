@@ -28,17 +28,21 @@ rds:
       au-mysql8-care:
         id: "arn:aws:rds:ap-southeast-2:059012766390:db:mysql8-care"
         region: "ap-southeast-2"
+        kms_key_id: "22584e80-f470-4c1a-9998-7e84cccf2b01"
       au-mysql8-vnnox:
         id: "arn:aws:rds:ap-southeast-2:059012766390:db:mysql8-vnnox"
         region: "ap-southeast-2"
+        kms_key_id: "22584e80-f470-4c1a-9998-7e84cccf2b01"
       in-care-mysql:
         id: "arn:aws:rds:ap-south-1:059012766390:db:care-mysql-in"
         region: "ap-south-1"
+        kms_key_id: "f76dbe99-7364-48b6-888d-4ac9f1b4ae87"
       in-vnnox-mysql:
         id: "arn:aws:rds:ap-south-1:059012766390:db:vnnox-in"
         region: "ap-south-1"
+        kms_key_id: "f76dbe99-7364-48b6-888d-4ac9f1b4ae87"
     export_task:
-      kms_key_id: "22584e80-f470-4c1a-9998-7e84cccf2b01"
       s3_bucket_name: "novacloud-devops"
+      s3_prefix: "mysql"
       iam_role_arn: "arn:aws:iam::059012766390:role/rds-s3-export-role"
       export_task_identifier_prefix: "snapshot-export"
