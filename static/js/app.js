@@ -1,21 +1,14 @@
-// 使用全局声明的组件
-const { Layout, Header, Content, Typography, Title } = window.antdComponents;
+const { Layout, Header, Content, Typography } = window.antdComponents;
+const { Title } = Typography;
 
 function App() {
     console.log('App component rendering'); // 添加日志
     return (
         <Layout>
-            <Header style={{ 
-                background: '#fff', 
-                padding: '0 20px',
-                textAlign: 'center'
-            }}>
+            <Header className="site-header">
                 <Title 
                     level={3} 
-                    style={{ 
-                        margin: '16px 0',
-                        fontWeight: 'bold'
-                    }}
+                    className="site-title"
                 >
                     Nova RDS 跨云灾备系统
                 </Title>
@@ -33,7 +26,7 @@ const renderApp = () => {
     const container = document.getElementById('root');
     if (container) {
         const root = ReactDOM.createRoot(container);
-        root.render(React.createElement(App));
+        root.render(<App />);  // 使用 JSX
     } else {
         console.error('Root element not found');
     }

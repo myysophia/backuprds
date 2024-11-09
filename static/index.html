@@ -4,6 +4,51 @@
     <meta charset="utf-8">
     <title>Nova RDS 跨云灾备系统</title>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/antd/4.24.14/antd.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/ant-design-icons/4.7.0/index.min.css">
+    <style>
+        body {
+            background-color: #f0f2f5;
+        }
+        .site-header {
+            background: linear-gradient(135deg, #1890ff, #722ed1);
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .site-title {
+            color: white !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .card-container {
+            margin-top: 24px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .custom-card {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+        .custom-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .status-tag {
+            border-radius: 12px;
+            padding: 2px 12px;
+        }
+        .search-box {
+            max-width: 500px;
+            margin: 0 auto 24px;
+        }
+        .action-button {
+            transition: all 0.3s;
+        }
+        .action-button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>
@@ -12,6 +57,7 @@
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/antd/4.24.14/antd.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/ant-design-icons/4.7.0/index.umd.min.js"></script>
     <script>
         console.log('Setting up antd components');
         window.antdComponents = {
@@ -20,13 +66,19 @@
             Content: antd.Layout.Content,
             Typography: antd.Typography,
             Title: antd.Typography.Title,
+            Text: antd.Typography.Text,
             Table: antd.Table,
             Input: antd.Input,
             Search: antd.Input.Search,
             Card: antd.Card,
             message: antd.message,
             Spin: antd.Spin,
-            Button: antd.Button
+            Button: antd.Button,
+            Modal: antd.Modal,
+            Tag: antd.Tag,
+            Space: antd.Space,
+            Tooltip: antd.Tooltip,
+            ExportOutlined: icons.ExportOutlined
         };
     </script>
     <script type="text/babel" src="/static/js/components/BackupList.js"></script>
