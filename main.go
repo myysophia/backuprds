@@ -19,12 +19,12 @@ func main() {
 	// 定义 API 路由
 	r.GET("/alirds/:env", backupHandler)
 	r.GET("/awsrds/:env", awsBackupHandler)
-	r.POST("/awsrds/export/:env", awsExportHandler) // 新增 AWS RDS 导出任务路由
+	r.POST("/awsrds/export/:env", awsExportHandler)           // 新增 AWS RDS 导出任务路由
 	r.POST("/alirds/export/s3/:env", aliRDSExportToS3Handler) // 新增路由
 	r.GET("/health", healthCheckHandler)
 
 	// 启动服务器
-	if err := r.Run(":8080"); err != nil {
+	if err := r.Run(":18888"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

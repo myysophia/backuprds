@@ -20,7 +20,6 @@ func createAWSClient(region string) (*rds.Client, error) {
 	// 从环境变量获取 AWS 凭证
 	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
-
 	if accessKey == "" || secretKey == "" {
 		return nil, fmt.Errorf("missing required environment variables: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY")
 	}
@@ -53,7 +52,7 @@ func startRDSSnapshotExport(
 ) (string, error) {
 	client, err := createAWSClient(region)
 	if err != nil {
-		return "", fmt.Errorf("failed to create AWS RDS client: %v", err)
+		return "", fmt.Errorf("startRDSSnapshotExport funcation failed to create AWS RDS client: %v", err)
 	}
 
 	// 截取实例ID的关键部分
@@ -98,10 +97,11 @@ func startRDSSnapshotExport(
 
 // getLatestSnapshotInfo 获取最新的 AWS RDS 快照信息
 func getLatestSnapshotInfo(instanceID string, region string) (map[string]string, error) {
-	client, err := createAWSClient(region)
 	log.Printf("Creating AWS RDS client for region: %s", region)
+	client, err := createAWSClient(region)
+	log.Printf("getLatestSnapshotInfo AWS get config err:%s", err)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create AWS RDS client: %v", err)
+		return nil, fmt.Errorf("getLatestSnapshotInfo funcation failed to create AWS RDS client: %v", err)
 	}
 
 	// 调用 DescribeDBSnapshots API，添加更多过滤条件
