@@ -99,6 +99,7 @@ func startRDSSnapshotExport(
 // getLatestSnapshotInfo 获取最新的 AWS RDS 快照信息
 func getLatestSnapshotInfo(instanceID string, region string) (map[string]string, error) {
 	client, err := createAWSClient(region)
+	log.Printf("Creating AWS RDS client for region: %s", region)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create AWS RDS client: %v", err)
 	}
