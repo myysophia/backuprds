@@ -20,6 +20,7 @@ func main() {
 	r.GET("/alirds/:env", backupHandler)
 	r.GET("/awsrds/:env", awsBackupHandler)
 	r.POST("/awsrds/export/:env", awsExportHandler) // 新增 AWS RDS 导出任务路由
+	r.POST("/alirds/export/s3/:env", aliRDSExportToS3Handler) // 新增路由
 	r.GET("/health", healthCheckHandler)
 
 	// 启动服务器

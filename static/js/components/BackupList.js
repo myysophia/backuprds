@@ -1,7 +1,7 @@
 const { 
     Table, Input, Card, message, Spin, Button, 
-    Modal, Tag, Space, Typography, Tooltip,
-    ExportOutlined  // 添加图标组件
+    Modal, Tag, Space, Typography, Tooltip, Form,
+    ExportOutlined, CloudUploadOutlined  // 添加上传图标
 } = window.antdComponents;
 
 const { Search } = Input;
@@ -15,6 +15,11 @@ function BackupList() {
     const [searchText, setSearchText] = React.useState('');
     const [exportModalVisible, setExportModalVisible] = React.useState(false);
     const [selectedSnapshot, setSelectedSnapshot] = React.useState(null);
+    const [s3ModalVisible, setS3ModalVisible] = React.useState(false);
+    const [s3UploadLoading, setS3UploadLoading] = React.useState(false);
+    const [selectedEnv, setSelectedEnv] = React.useState(null);
+    const [selectedBackup, setSelectedBackup] = React.useState(null);
+    const [form] = Form.useForm();
 
     const fetchBackup = async (env) => {
         console.log(`Fetching backup for ${env}`);
@@ -170,6 +175,28 @@ function BackupList() {
                 </a>
             ) : '无备份',
         },
+        {
+            title: '操作',
+            key: 'action',
+            render: (_, record) => (
+                <Space>
+                    <Tooltip title="上传备份到S3">
+                        <Button
+                            type="primary"
+                            icon={<CloudUploadOutlined />}
+                            onClick={() => {
+                                setSelectedEnv(record.env);
+                                setS3ModalVisible(true);
+                                form.resetFields();
+                            }}
+                            disabled={!record.backupDownloadUrl}
+                        >
+                            上传到S3
+                        </Button>
+                    </Tooltip>
+                </Space>
+            ),
+        }
     ];
 
     const awsColumns = [
@@ -207,7 +234,7 @@ function BackupList() {
                 <Space>
                     <Tooltip title={
                         record.status !== 'available' 
-                            ? '只有状态为可用的快照才能导出' 
+                            ? '只有状态为可用��快照才能导出' 
                             : '导出快照到 S3'
                     }>
                         <Button 
@@ -293,6 +320,42 @@ function BackupList() {
         );
     };
 
+    const handleS3Upload = async () => {
+        setS3UploadLoading(true);
+        try {
+            const response = await fetch(`/alirds/export/s3/${selectedEnv}`, {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                message.success({
+                    content: (
+                        <div>
+                            <div>备份文件开始上传</div>
+                            <div>S3位置: s3://{data.s3_bucket}/{data.s3_key}</div>
+                        </div>
+                    ),
+                    duration: 5
+                });
+                setS3ModalVisible(false);
+            } else {
+                throw new Error(data.error || '上传失败');
+            }
+        } catch (error) {
+            message.error(`上传失败: ${error.message}`);
+        } finally {
+            setS3UploadLoading(false);
+        }
+    };
+
+    const showS3UploadConfirm = (record) => {
+        setSelectedEnv(record.env);
+        setSelectedBackup(record);
+        setS3ModalVisible(true);
+    };
+
     return (
         <div>
             <Search
@@ -345,6 +408,28 @@ function BackupList() {
                         <p><strong>快照ID：</strong>{selectedSnapshot.snapshotId}</p>
                         <p><strong>创建时间：</strong>{dayjs(selectedSnapshot.snapshotCreateTime).format('YYYY-MM-DD HH:mm:ss')}</p>
                         <p><strong>区域：</strong>{selectedSnapshot.region}</p>
+                    </div>
+                )}
+            </Modal>
+
+            <Modal
+                title="确认上传备份到S3"
+                visible={s3ModalVisible}
+                onOk={handleS3Upload}
+                onCancel={() => !s3UploadLoading && setS3ModalVisible(false)}
+                okText="确认上传"
+                cancelText="取消"
+                okButtonProps={{ loading: s3UploadLoading }}
+                cancelButtonProps={{ disabled: s3UploadLoading }}
+                maskClosable={!s3UploadLoading}
+                closable={!s3UploadLoading}
+            >
+                {selectedBackup && (
+                    <div>
+                        <p>您确定要上传以下备份到S3吗？</p>
+                        <p><strong>环境：</strong>{selectedBackup.env}</p>
+                        <p><strong>备份时间：</strong>{dayjs(selectedBackup.backupStartTime).format('YYYY-MM-DD HH:mm:ss')}</p>
+                        <p><strong>目标区域：</strong>{selectedBackup.region}</p>
                     </div>
                 )}
             </Modal>

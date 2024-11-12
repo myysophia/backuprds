@@ -50,7 +50,7 @@ func backupHandler(c *gin.Context) {
 			return
 		}
 
-		// 找到备份，返回结果
+		// 找到备份返回结果
 		c.JSON(http.StatusOK, gin.H{
 			"backup_start_time":            backupURLs["BackupStartTime"],
 			"backup_download_url":          backupURLs["BackupDownloadURL"],
@@ -187,4 +187,56 @@ func awsExportHandler(c *gin.Context) {
 // healthCheckHandler 处理健康检查请求
 func healthCheckHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+}
+
+// aliRDSExportToS3Handler 处理阿里云RDS备份导出到S3的请求
+func aliRDSExportToS3Handler(c *gin.Context) {
+	env := c.Param("env")
+
+	// 获取实例配置
+	instanceConfig, ok := configs.RDS.Aliyun.Instances[env]
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
+		return
+	}
+
+	// 获取备份下载链接
+	backupURLs, err := getLastBackupURLs(instanceConfig.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "failed to get backup URLs",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	if backupURLs["BackupDownloadURL"] == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no backup found"})
+		return
+	}
+
+	// 使用配置中的S3信息
+	result, err := uploadBackupToS3(
+		backupURLs["BackupDownloadURL"],
+		configs.RDS.Aliyun.S3Export.BucketName,
+		configs.RDS.Aliyun.S3Export.Region,
+		env,
+		backupURLs["BackupStartTime"],
+	)
+	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "failed to upload to S3",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":           "Backup upload to S3 started",
+		"s3_bucket":        configs.RDS.Aliyun.S3Export.BucketName,
+		"s3_key":           result.S3Key,
+		"backup_start_time": backupURLs["BackupStartTime"],
+		"region":           configs.RDS.Aliyun.S3Export.Region,
+	})
 }

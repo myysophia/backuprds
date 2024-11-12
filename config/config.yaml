@@ -23,6 +23,9 @@ rds:
       vnnox-us-db:
         id: "rm-rj934t1rmdn12j04m"
         region: "us-east-1"
+    s3_export:
+      region: "ap-southeast-2"
+      bucket_name: "alirds-backup"
   aws:
     instances:
       au-mysql8-care:

@@ -48,6 +48,18 @@
         .action-button:hover {
             transform: translateY(-2px);
         }
+        .ant-modal-body .ant-spin-nested-loading {
+            min-height: 200px;
+        }
+        
+        .ant-form-item-label > label {
+            font-weight: 500;
+        }
+        
+        .upload-progress {
+            margin-top: 16px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -78,10 +90,30 @@
             Tag: antd.Tag,
             Space: antd.Space,
             Tooltip: antd.Tooltip,
-            ExportOutlined: icons.ExportOutlined
+            ExportOutlined: icons.ExportOutlined,
+            Form: antd.Form,
+            CloudUploadOutlined: icons.CloudUploadOutlined
         };
     </script>
     <script type="text/babel" src="/static/js/components/BackupList.js"></script>
     <script type="text/babel" src="/static/js/app.js"></script>
+    <script>
+        function uploadToS3(env) {
+            fetch(`/alirds/export/s3/${env}`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('上传失败: ' + data.error);
+                } else {
+                    alert('备份文件开始上传到S3\n目标位置: ' + data.s3_bucket + '/' + data.s3_key);
+                }
+            })
+            .catch(error => {
+                alert('请求失败: ' + error);
+            });
+        }
+    </script>
 </body>
 </html>

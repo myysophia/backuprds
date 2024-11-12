@@ -13,6 +13,10 @@ type Config struct {
 			AccessKey    string            `yaml:"access_key"`
 			AccessSecret string            `yaml:"access_secret"`
 			Instances    map[string]InstanceConfig `yaml:"instances"`
+			S3Export     struct {
+				Region     string `yaml:"region"`
+				BucketName string `yaml:"bucket_name"`
+			} `yaml:"s3_export"`
 		} `yaml:"aliyun"`
 		Aws struct {
 			Instances   map[string]InstanceConfig `yaml:"instances"`
