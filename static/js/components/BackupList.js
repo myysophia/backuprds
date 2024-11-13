@@ -20,6 +20,7 @@ function BackupList() {
     const [selectedEnv, setSelectedEnv] = React.useState(null);
     const [selectedBackup, setSelectedBackup] = React.useState(null);
     const [form] = Form.useForm();
+    const [s3Config, setS3Config] = React.useState(null);
 
     const fetchBackup = async (env) => {
         console.log(`Fetching backup for ${env}`);
@@ -92,6 +93,20 @@ function BackupList() {
         }
     };
 
+    const fetchS3Config = async () => {
+        try {
+            const response = await fetch('/alirds/s3config');
+            const data = await response.json();
+            if (response.ok) {
+                setS3Config(data);
+            } else {
+                throw new Error(data.error || '获取S3配置失败');
+            }
+        } catch (error) {
+            message.error(`获取S3配置失败: ${error.message}`);
+        }
+    };
+
     React.useEffect(() => {
         console.log('useEffect triggered'); // 添加日志
         const fetchData = async () => {
@@ -120,6 +135,7 @@ function BackupList() {
         };
 
         fetchData();
+        fetchS3Config();
     }, []);
 
     const aliColumns = [
@@ -183,13 +199,9 @@ function BackupList() {
                     <Tooltip title="上传备份到S3">
                         <Button
                             type="primary"
+                            className="action-button"
                             icon={<CloudUploadOutlined />}
-                            onClick={() => {
-                                setSelectedEnv(record.env);
-                                setS3ModalVisible(true);
-                                form.resetFields();
-                            }}
-                            disabled={!record.backupDownloadUrl}
+                            onClick={() => showS3UploadConfirm(record)}
                         >
                             上传到S3
                         </Button>
@@ -234,7 +246,7 @@ function BackupList() {
                 <Space>
                     <Tooltip title={
                         record.status !== 'available' 
-                            ? '只有状态为可用��快照才能导出' 
+                            ? '只有状态为可用快照才能导出' 
                             : '导出快照到 S3'
                     }>
                         <Button 
@@ -335,6 +347,7 @@ function BackupList() {
                         <div>
                             <div>备份文件开始上传</div>
                             <div>S3位置: s3://{data.s3_bucket}/{data.s3_key}</div>
+                            <div>��计耗时: 3-5分钟</div>
                         </div>
                     ),
                     duration: 5
@@ -424,12 +437,24 @@ function BackupList() {
                 maskClosable={!s3UploadLoading}
                 closable={!s3UploadLoading}
             >
-                {selectedBackup && (
+                {selectedBackup && s3Config && (
                     <div>
                         <p>您确定要上传以下备份到S3吗？</p>
-                        <p><strong>环境：</strong>{selectedBackup.env}</p>
-                        <p><strong>备份时间：</strong>{dayjs(selectedBackup.backupStartTime).format('YYYY-MM-DD HH:mm:ss')}</p>
-                        <p><strong>目标区域：</strong>{selectedBackup.region}</p>
+                        <p><strong>环境：</strong> {selectedBackup.env}</p>
+                        <p><strong>备份时间：</strong> {dayjs(selectedBackup.backupStartTime).format('YYYY-MM-DD HH:mm:ss')}</p>
+                        <div className="upload-info">
+                            <p><strong>目标S3信息：</strong></p>
+                            <ul>
+                                <li><strong>Bucket：</strong> {s3Config.bucket_name}</li>
+                                <li><strong>Region：</strong> {s3Config.region}</li>
+                                <li><strong>路径：</strong> rds-backups/{selectedBackup.env}/</li>
+                            </ul>
+                        </div>
+                        {s3UploadLoading && (
+                            <div className="upload-progress">
+                                <Spin tip="正在上传..." />
+                            </div>
+                        )}
                     </div>
                 )}
             </Modal>

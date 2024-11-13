@@ -22,6 +22,7 @@ func main() {
 	r.POST("/awsrds/export/:env", awsExportHandler)           // 新增 AWS RDS 导出任务路由
 	r.POST("/alirds/export/s3/:env", aliRDSExportToS3Handler) // 新增路由
 	r.GET("/health", healthCheckHandler)
+	r.GET("/alirds/s3config", getS3ConfigHandler)
 
 	// 启动服务器
 	if err := r.Run(":18888"); err != nil {

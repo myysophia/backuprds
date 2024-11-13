@@ -200,6 +200,13 @@ func aliRDSExportToS3Handler(c *gin.Context) {
 		return
 	}
 
+	// 获取S3配置信息
+	s3Config := configs.RDS.Aliyun.S3Export
+	if s3Config.Region == "" || s3Config.BucketName == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "S3 configuration is missing"})
+		return
+	}
+
 	// 获取备份下载链接
 	backupURLs, err := getLastBackupURLs(instanceConfig.ID)
 	if err != nil {
@@ -238,5 +245,21 @@ func aliRDSExportToS3Handler(c *gin.Context) {
 		"s3_key":           result.S3Key,
 		"backup_start_time": backupURLs["BackupStartTime"],
 		"region":           configs.RDS.Aliyun.S3Export.Region,
+	})
+}
+
+// 添加新的处理函数
+func getS3ConfigHandler(c *gin.Context) {
+	s3Config := configs.RDS.Aliyun.S3Export
+	if s3Config.Region == "" || s3Config.BucketName == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "S3 configuration is missing",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"region":      s3Config.Region,
+		"bucket_name": s3Config.BucketName,
 	})
 }
