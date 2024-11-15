@@ -2,16 +2,27 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
+
+	_ "backuprds/docs"
+
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title        Nova RDS 跨云灾备系统 API
+// @version      1.0
+// @description  用于管理阿里云和AWS RDS备份的API系统
+// @BasePath     /
+
 func main() {
-	// 加载配置
 	loadConfig()
 
-	// 初始化 Gin 路由
 	r := gin.Default()
+
+	// 添加swagger路由
+	r.GET("/doc/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// 配置静态文件路径
 	r.Static("/static", "./static")
@@ -25,7 +36,7 @@ func main() {
 	r.GET("/alirds/s3config", getS3ConfigHandler)
 
 	// 启动服务器
-	if err := r.Run(":18888"); err != nil {
+	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

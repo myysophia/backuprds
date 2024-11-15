@@ -2,10 +2,11 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -13,7 +14,18 @@ const (
 	retryDelay = 2 * time.Second
 )
 
-// backupHandler 处理获取备份下载链接的请求
+// backupHandler godoc
+// @Summary      获取阿里云RDS备份下载链接
+// @Description  获取指定环境的阿里云RDS最新备份下载链接
+// @Tags         阿里云RDS
+// @Accept       json
+// @Produce      json
+// @Param        env  path      string  true  "环境名称"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]interface{}
+// @Router       /alirds/{env} [get]
 func backupHandler(c *gin.Context) {
 	env := c.Param("env")
 
@@ -117,7 +129,18 @@ func awsBackupHandler(c *gin.Context) {
 	})
 }
 
-// awsExportHandler 启动 AWS RDS 快照的导出任务
+// awsExportHandler godoc
+// @Summary      启动AWS RDS快照导出任务
+// @Description  为指定环境的AWS RDS实例启动快照导出任务
+// @Tags         AWS RDS
+// @Accept       json
+// @Produce      json
+// @Param        env  path      string  true  "环境名称"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]interface{}
+// @Router       /awsrds/export/{env} [post]
 func awsExportHandler(c *gin.Context) {
 	env := c.Param("env")
 
@@ -184,12 +207,30 @@ func awsExportHandler(c *gin.Context) {
 	})
 }
 
-// healthCheckHandler 处理健康检查请求
+// healthCheckHandler godoc
+// @Summary      健康检查
+// @Description  API服务健康状态检查
+// @Tags         系统
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Router       /health [get]
 func healthCheckHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "healthy"})
 }
 
-// aliRDSExportToS3Handler 处理阿里云RDS备份导出到S3的请求
+// aliRDSExportToS3Handler godoc
+// @Summary      将阿里云RDS备份上传到S3
+// @Description  获取指定环境的阿里云RDS最新备份并上传到AWS S3
+// @Tags         阿里云RDS
+// @Accept       json
+// @Produce      json
+// @Param        env  path      string  true  "环境名称"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]interface{}
+// @Router       /alirds/export/s3/{env} [post]
 func aliRDSExportToS3Handler(c *gin.Context) {
 	env := c.Param("env")
 
@@ -230,7 +271,7 @@ func aliRDSExportToS3Handler(c *gin.Context) {
 		env,
 		backupURLs["BackupStartTime"],
 	)
-	
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "failed to upload to S3",
@@ -241,14 +282,22 @@ func aliRDSExportToS3Handler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":           "Backup upload to S3 started",
-		"s3_bucket":        configs.RDS.Aliyun.S3Export.BucketName,
-		"s3_key":           result.S3Key,
+		"s3_bucket":         configs.RDS.Aliyun.S3Export.BucketName,
+		"s3_key":            result.S3Key,
 		"backup_start_time": backupURLs["BackupStartTime"],
-		"region":           configs.RDS.Aliyun.S3Export.Region,
+		"region":            configs.RDS.Aliyun.S3Export.Region,
 	})
 }
 
-// 添加新的处理函数
+// getS3ConfigHandler godoc
+// @Summary      获取S3配置信息
+// @Description  获取用于上传的AWS S3配置信息
+// @Tags         配置
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /alirds/s3config [get]
 func getS3ConfigHandler(c *gin.Context) {
 	s3Config := configs.RDS.Aliyun.S3Export
 	if s3Config.Region == "" || s3Config.BucketName == "" {

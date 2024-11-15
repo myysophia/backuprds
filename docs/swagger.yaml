@@ -1,0 +1,162 @@
+basePath: /
+info:
+  contact: {}
+  description: 用于管理阿里云和AWS RDS备份的API系统
+  title: Nova RDS 跨云灾备系统 API
+  version: "1.0"
+paths:
+  /alirds/{env}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定环境的阿里云RDS最新备份下载链接
+      parameters:
+      - description: 环境名称
+        in: path
+        name: env
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 获取阿里云RDS备份下载链接
+      tags:
+      - 阿里云RDS
+  /alirds/export/s3/{env}:
+    post:
+      consumes:
+      - application/json
+      description: 获取指定环境的阿里云RDS最新备份并上传到AWS S3
+      parameters:
+      - description: 环境名称
+        in: path
+        name: env
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 将阿里云RDS备份上传到S3
+      tags:
+      - 阿里云RDS
+  /alirds/s3config:
+    get:
+      consumes:
+      - application/json
+      description: 获取用于上传的AWS S3配置信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 获取S3配置信息
+      tags:
+      - 配置
+  /awsrds/export/{env}:
+    post:
+      consumes:
+      - application/json
+      description: 为指定环境的AWS RDS实例启动快照导出任务
+      parameters:
+      - description: 环境名称
+        in: path
+        name: env
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 启动AWS RDS快照导出任务
+      tags:
+      - AWS RDS
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: API服务健康状态检查
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 健康检查
+      tags:
+      - 系统
+swagger: "2.0"
