@@ -4,7 +4,7 @@ name:  Docker Image Push
 on:
   push:
     branches:
-      - "master"
+      - "main"
     tags:
       - "v*"  # 匹配所有的 tag 推送
 
