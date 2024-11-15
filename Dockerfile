@@ -24,6 +24,5 @@ RUN apk update && apk upgrade \
     && mkdir -p /data/backuprds/
 
 COPY --from=builder /opt/app/backuprds /usr/bin/backuprds
-ADD start.sh /data/backuprds/
 WORKDIR /data/backuprds/
 
