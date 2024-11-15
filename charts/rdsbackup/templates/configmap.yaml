@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "rdsbackup.fullname" . }}
+  labels:
+    {{- include "rdsbackup.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    rds:
+      aliyun:
+        s3_export:
+          region: {{ .Values.config.rds.aliyun.s3_export.region }}
+          bucket_name: {{ .Values.config.rds.aliyun.s3_export.bucket_name }} 
