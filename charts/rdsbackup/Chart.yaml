@@ -1,0 +1,6 @@
+apiVersion: v2
+name: rdsbackup
+description: Nova RDS 跨云灾备系统
+type: application
+version: 0.1.0
+appVersion: "1.0.0" 

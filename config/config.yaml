@@ -1,0 +1,57 @@
+# config/config.yaml
+rds:
+  aliyun:
+    instances:
+      vnnox-uat:
+        id: "rm-bp11p2eu53e95lr1m"
+        region: "cn-hangzhou"
+      vnnox-cn-db:
+        id: "rm-bp1xn3t59czt61603"
+        region: "cn-hangzhou"
+      care-cn-db:
+        id: "rm-bp10ega8r2a3f62js"
+        region: "cn-hangzhou"
+      vnnox-sg-db:
+        id: "rm-t4n7fdapio4fa8afc"
+        region: "ap-southeast-1"
+      care-eu-db:
+        id: "rm-gw8p91py2a9l6zmw3"
+        region: "eu-central-1"
+      vnnox-eu-db:
+        id: "rm-gw856wli569ql92w7"
+        region: "eu-central-1"
+      care-us-db:
+        id: "rm-rj9z401jq58lm0od2"
+        region: "us-east-1"
+      vnnox-us-db:
+        id: "rm-rj934t1rmdn12j04m"
+        region: "us-east-1"
+    s3_export:
+      region: "ap-southeast-2"
+      bucket_name: "alirds-backup"
+  aws:
+    instances:
+      au-mysql8-care:
+        id: "arn:aws:rds:ap-southeast-2:059012766390:db:mysql8-care"
+        region: "ap-southeast-2"
+        kms_key_id: "22584e80-f470-4c1a-9998-7e84cccf2b01"
+        s3_bucket_name: "novacloud-devops"
+      au-mysql8-vnnox:
+        id: "arn:aws:rds:ap-southeast-2:059012766390:db:mysql8-vnnox"
+        region: "ap-southeast-2"
+        kms_key_id: "22584e80-f470-4c1a-9998-7e84cccf2b01"
+        s3_bucket_name: "novacloud-devops"
+      in-care-mysql:
+        id: "arn:aws:rds:ap-south-1:059012766390:db:care-mysql-in"
+        region: "ap-south-1"
+        kms_key_id: "f76dbe99-7364-48b6-888d-4ac9f1b4ae87"
+        s3_bucket_name: "in-novacloud-backup"
+      in-vnnox-mysql:
+        id: "arn:aws:rds:ap-south-1:059012766390:db:vnnox-in"
+        region: "ap-south-1"
+        kms_key_id: "f76dbe99-7364-48b6-888d-4ac9f1b4ae87"
+        s3_bucket_name: "in-novacloud-backup"
+    export_task:
+      s3_prefix: "mysql"
+      iam_role_arn: "arn:aws:iam::059012766390:role/rds-s3-export-role"
+      export_task_identifier_prefix: "snapshot-export"
