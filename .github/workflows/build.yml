@@ -3,9 +3,9 @@ name: Docker Image Push
 on:
   push:
     branches:
-      - "master"
+      - "master1"
     tags:
-      - "v*"
+      - "t*"
 
 env:
   DOCKERHUB_USERNAME: ninesun0318
