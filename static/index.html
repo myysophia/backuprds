@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Nova RDS 跨云灾备系统</title>
+    <link href="https://unpkg.com/antd@4.24.14/dist/antd.min.css" rel="stylesheet" crossorigin="anonymous">
+    <style>
+        body { background-color: #f0f2f5; }
+        .site-header {
+            background: linear-gradient(135deg, #1890ff, #722ed1);
+            padding: 16px;
+        }
+        .site-title { color: white !important; margin: 0 !important; }
+        .site-content { padding: 24px; }
+        .custom-card { box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .header-actions {
+            float: right;
+            margin-right: 24px;
+        }
+        .api-doc-button {
+            color: white !important;
+            border-color: rgba(255,255,255,0.3) !important;
+        }
+        .api-doc-button:hover {
+            color: #1890ff !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-color: transparent !important;
+        }
+        .site-sider {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: relative;
+            z-index: 10;
+        }
+        .sidebar-trigger {
+            padding: 16px;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .sidebar-trigger .ant-btn {
+            font-size: 16px;
+        }
+        .ant-menu-inline {
+            border-right: none;
+        }
+        .site-content {
+            background: #fff;
+            padding: 24px;
+            margin: 0;
+            min-height: 280px;
+        }
+        .logo {
+            height: 32px;
+            margin: 16px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">Loading...</div>
+
+    <!-- 核心依赖 -->
+    <script src="https://unpkg.com/react@17.0.2/umd/react.development.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.development.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/moment@2.29.1/min/moment.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/antd@4.24.14/dist/antd.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.21.2/babel.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@ant-design/icons@4.7.0/dist/index.umd.js" crossorigin="anonymous"></script>
+
+    <script>
+        console.log('Initializing dependencies...');
+        
+        // 添加错误处理
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('Global error:', {message, source, lineno, colno, error});
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+        });
+        
+        // 依赖检查
+        if (!window.React) console.error('React not loaded');
+        if (!window.ReactDOM) console.error('ReactDOM not loaded');
+        if (!window.antd) console.error('Antd not loaded');
+        if (!window.icons) console.error('Icons not loaded');
+        
+        // 初始化全局组件
+        window.antComponents = {
+            Layout: antd.Layout,
+            Typography: antd.Typography,
+            Card: antd.Card,
+            Table: antd.Table,
+            message: antd.message,
+            Spin: antd.Spin,
+            Button: antd.Button,
+            Modal: antd.Modal,
+            Tag: antd.Tag,
+            Space: antd.Space,
+            Tooltip: antd.Tooltip,
+            Tabs: antd.Tabs,
+            Alert: antd.Alert,  // 添加 Alert 组件
+            Menu: antd.Menu,
+            Form: antd.Form,
+            Select: antd.Select,
+            Statistic: antd.Statistic,
+            Row: antd.Row,
+            Col: antd.Col,
+            Result: antd.Result  // 添加 Result 组件
+        };
+
+        window.antIcons = {
+            ExportOutlined: icons.ExportOutlined,
+            CloudUploadOutlined: icons.CloudUploadOutlined,
+            ApiOutlined: icons.ApiOutlined,
+            ReloadOutlined: icons.ReloadOutlined,  // 添加 ReloadOutlined 图标
+            HomeOutlined: icons.HomeOutlined,
+            DatabaseOutlined: icons.DatabaseOutlined,
+            CloudServerOutlined: icons.CloudServerOutlined,
+            DashboardOutlined: icons.DashboardOutlined,
+            MenuFoldOutlined: icons.MenuFoldOutlined,
+            MenuUnfoldOutlined: icons.MenuUnfoldOutlined
+        };
+
+        window.dayjs = moment;
+        
+        console.log('Dependencies initialized');
+    </script>
+
+    <!-- 加载组件 -->
+    <script type="text/babel" data-type="module" src="/static/js/components/BackupList.js"></script>
+    <script type="text/babel" data-type="module" src="/static/js/app.js"></script>
+</body>
+</html>

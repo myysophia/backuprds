@@ -1,0 +1,81 @@
+# Default values for rdsbackup
+replicaCount: 1
+
+image:
+  repository: ninesun0318/backuprds
+  pullPolicy: IfNotPresent
+  tag: "main"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  hosts:
+    - host: backup.ampaura.tech 
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+config:
+  rds:
+    aliyun:
+      s3_export:
+        region: "ap-southeast-2"
+        bucket_name: "alirds-backup"
+
+secrets:
+  aws:
+    enabled: true
+    access_key_id: ""
+    secret_access_key: "="
+  alibaba:
+    enabled: true
+    access_key_id: "=="
+    access_key_secret: "=="
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {} 

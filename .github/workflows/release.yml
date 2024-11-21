@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GO_VERSION: '1.22'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rhash upx-ucl
+
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          PLATFORMS=("linux/amd64" "darwin/amd64" "windows/amd64")
+          
+          for PLATFORM in "${PLATFORMS[@]}"; do
+            GOOS=${PLATFORM%/*}
+            GOARCH=${PLATFORM#*/}
+            
+            # 设置输出文件名
+            if [ "$GOOS" = "windows" ]; then
+              OUTPUT="dist/backuprds-${GOOS}-${GOARCH}.exe"
+            else
+              OUTPUT="dist/backuprds-${GOOS}-${GOARCH}"
+            fi
+            
+            # 编译
+            echo "Building for $GOOS/$GOARCH..."
+            CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build -ldflags="-s -w" -o $OUTPUT
+            
+            # 压缩二进制（仅限 Linux 和 Darwin）
+            if [ "$GOOS" != "windows" ]; then
+              upx --best --lzma $OUTPUT
+            fi
+            
+            # 生成校验和
+            sha256sum $OUTPUT > "${OUTPUT}.sha256"
+          done
+
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          configuration: ".github/changelog-config.json"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: dist/*
+          retention-days: 5
+
