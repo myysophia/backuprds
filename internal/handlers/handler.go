@@ -1,10 +1,13 @@
-// handler.go
-package main
+package handlers
 
 import (
 	"log"
 	"net/http"
 	"time"
+
+	"backuprds/internal/config"
+	"backuprds/internal/service/aliyun"
+	"backuprds/internal/service/aws"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,7 +17,7 @@ const (
 	retryDelay = 2 * time.Second
 )
 
-// backupHandler godoc
+// BackupHandler godoc
 // @Summary      获取阿里云RDS备份下载链接
 // @Description  获取指定环境的阿里云RDS最新备份下载链接
 // @Tags         阿里云RDS
@@ -26,11 +29,12 @@ const (
 // @Failure      404  {object}  map[string]interface{}
 // @Failure      500  {object}  map[string]interface{}
 // @Router       /alirds/{env} [get]
-func backupHandler(c *gin.Context) {
+func BackupHandler(c *gin.Context) {
 	env := c.Param("env")
+	cfg := config.GetConfig()
 
 	// 根据环境参数获取实例 ID
-	instanceID, ok := configs.RDS.Aliyun.Instances[env]
+	instanceID, ok := cfg.RDS.Aliyun.Instances[env]
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
 		return
@@ -42,7 +46,7 @@ func backupHandler(c *gin.Context) {
 	var lastErr error
 
 	for i := 0; i < maxRetries; i++ {
-		backupURLs, err = getLastBackupURLs(instanceID.ID)
+		backupURLs, err = aliyun.GetLastBackupURLs(instanceID.ID)
 		if err != nil {
 			lastErr = err
 			time.Sleep(retryDelay)
@@ -83,11 +87,13 @@ func backupHandler(c *gin.Context) {
 	}
 }
 
-func awsBackupHandler(c *gin.Context) {
+// AwsBackupHandler godoc
+func AwsBackupHandler(c *gin.Context) {
 	env := c.Param("env")
+	cfg := config.GetConfig()
 
 	// 获取实例配置
-	instanceConfig, ok := configs.RDS.Aws.Instances[env]
+	instanceConfig, ok := cfg.RDS.Aws.Instances[env]
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
 		return
@@ -96,7 +102,7 @@ func awsBackupHandler(c *gin.Context) {
 	log.Printf("Fetching snapshots for instance: %s in region: %s", instanceConfig.ID, instanceConfig.Region)
 
 	// 获取最新快照信息
-	snapshotInfo, err := getLatestSnapshotInfo(instanceConfig.ID, instanceConfig.Region)
+	snapshotInfo, err := aws.GetLatestSnapshotInfo(instanceConfig.ID, instanceConfig.Region)
 	if err != nil {
 		log.Printf("Error getting snapshot info: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -129,7 +135,7 @@ func awsBackupHandler(c *gin.Context) {
 	})
 }
 
-// awsExportHandler godoc
+// AwsExportHandler godoc
 // @Summary      启动AWS RDS快照导出任务
 // @Description  为指定环境的AWS RDS实例启动快照导出任务
 // @Tags         AWS RDS
@@ -141,11 +147,12 @@ func awsBackupHandler(c *gin.Context) {
 // @Failure      404  {object}  map[string]interface{}
 // @Failure      500  {object}  map[string]interface{}
 // @Router       /awsrds/export/{env} [post]
-func awsExportHandler(c *gin.Context) {
+func AwsExportHandler(c *gin.Context) {
 	env := c.Param("env")
+	cfg := config.GetConfig()
 
 	// 获取实例配置
-	instanceConfig, ok := configs.RDS.Aws.Instances[env]
+	instanceConfig, ok := cfg.RDS.Aws.Instances[env]
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
 		return
@@ -154,7 +161,7 @@ func awsExportHandler(c *gin.Context) {
 	log.Printf("Starting export task for instance: %s in region: %s", instanceConfig.ID, instanceConfig.Region)
 
 	// 先获取最新的快照信息
-	snapshotInfo, err := getLatestSnapshotInfo(instanceConfig.ID, instanceConfig.Region)
+	snapshotInfo, err := aws.GetLatestSnapshotInfo(instanceConfig.ID, instanceConfig.Region)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "failed to get snapshot info",
@@ -176,14 +183,14 @@ func awsExportHandler(c *gin.Context) {
 	}
 
 	// 启动快照导出任务
-	exportTaskID, err := startRDSSnapshotExport(
+	exportTaskID, err := aws.StartRDSSnapshotExport(
 		instanceConfig.ID,
 		snapshotInfo["SnapshotArn"],
 		instanceConfig.Region,
-		configs.RDS.Aws.ExportTask.IamRoleArn,
+		cfg.RDS.Aws.ExportTask.IamRoleArn,
 		instanceConfig.KmsKeyId,
 		instanceConfig.S3BucketName,
-		configs.RDS.Aws.ExportTask.S3Prefix,
+		cfg.RDS.Aws.ExportTask.S3Prefix,
 	)
 
 	if err != nil {
@@ -207,7 +214,7 @@ func awsExportHandler(c *gin.Context) {
 	})
 }
 
-// healthCheckHandler godoc
+// HealthCheckHandler godoc
 // @Summary      健康检查
 // @Description  API服务健康状态检查
 // @Tags         系统
@@ -215,11 +222,11 @@ func awsExportHandler(c *gin.Context) {
 // @Produce      json
 // @Success      200  {object}  map[string]string
 // @Router       /health [get]
-func healthCheckHandler(c *gin.Context) {
+func HealthCheckHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "healthy"})
 }
 
-// aliRDSExportToS3Handler godoc
+// AliRDSExportToS3Handler godoc
 // @Summary      将阿里云RDS备份上传到S3
 // @Description  获取指定环境的阿里云RDS最新备份并上传到AWS S3
 // @Tags         阿里云RDS
@@ -231,25 +238,26 @@ func healthCheckHandler(c *gin.Context) {
 // @Failure      404  {object}  map[string]interface{}
 // @Failure      500  {object}  map[string]interface{}
 // @Router       /alirds/export/s3/{env} [post]
-func aliRDSExportToS3Handler(c *gin.Context) {
+func AliRDSExportToS3Handler(c *gin.Context) {
 	env := c.Param("env")
+	cfg := config.GetConfig()
 
 	// 获取实例配置
-	instanceConfig, ok := configs.RDS.Aliyun.Instances[env]
+	instanceConfig, ok := cfg.RDS.Aliyun.Instances[env]
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
 		return
 	}
 
 	// 获取S3配置信息
-	s3Config := configs.RDS.Aliyun.S3Export
+	s3Config := cfg.RDS.Aliyun.S3Export
 	if s3Config.Region == "" || s3Config.BucketName == "" {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "S3 configuration is missing"})
 		return
 	}
 
 	// 获取备份下载链接
-	backupURLs, err := getLastBackupURLs(instanceConfig.ID)
+	backupURLs, err := aliyun.GetLastBackupURLs(instanceConfig.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "failed to get backup URLs",
@@ -264,10 +272,10 @@ func aliRDSExportToS3Handler(c *gin.Context) {
 	}
 
 	// 执行上传任务并等待完成
-	result, err := uploadBackupToS3(
+	result, err := aws.UploadBackupToS3(
 		backupURLs["BackupDownloadURL"],
-		configs.RDS.Aliyun.S3Export.BucketName,
-		configs.RDS.Aliyun.S3Export.Region,
+		cfg.RDS.Aliyun.S3Export.BucketName,
+		cfg.RDS.Aliyun.S3Export.Region,
 		env,
 		backupURLs["BackupStartTime"],
 	)
@@ -283,14 +291,14 @@ func aliRDSExportToS3Handler(c *gin.Context) {
 	// 返回成功结果
 	c.JSON(http.StatusOK, gin.H{
 		"message":   "Backup upload completed",
-		"s3_bucket": configs.RDS.Aliyun.S3Export.BucketName,
+		"s3_bucket": cfg.RDS.Aliyun.S3Export.BucketName,
 		"s3_key":    result.S3Key,
 		"location":  result.Location,
-		"region":    configs.RDS.Aliyun.S3Export.Region,
+		"region":    cfg.RDS.Aliyun.S3Export.Region,
 	})
 }
 
-// getS3ConfigHandler godoc
+// GetS3ConfigHandler godoc
 // @Summary      获取S3配置信息
 // @Description  获取用于上传的AWS S3配置信息
 // @Tags         配置
@@ -299,11 +307,22 @@ func aliRDSExportToS3Handler(c *gin.Context) {
 // @Success      200  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /alirds/s3config [get]
-func getS3ConfigHandler(c *gin.Context) {
-	s3Config := configs.RDS.Aliyun.S3Export
+func GetS3ConfigHandler(c *gin.Context) {
+	cfg := config.GetConfig()
+	s3Config := cfg.RDS.Aliyun.S3Export
+
+	// 添加调试日志
+	log.Printf("S3 Config - Region: %s, BucketName: %s", s3Config.Region, s3Config.BucketName)
+
 	if s3Config.Region == "" || s3Config.BucketName == "" {
+		log.Printf("S3 configuration is missing - Region: %q, BucketName: %q",
+			s3Config.Region, s3Config.BucketName)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "S3 configuration is missing",
+			"details": map[string]string{
+				"region":      s3Config.Region,
+				"bucket_name": s3Config.BucketName,
+			},
 		})
 		return
 	}
@@ -314,7 +333,7 @@ func getS3ConfigHandler(c *gin.Context) {
 	})
 }
 
-// getInstancesHandler godoc
+// GetInstancesHandler godoc
 // @Summary      获取所有实例配置
 // @Description  获取阿里云和AWS的所有实例配置信息
 // @Tags         配置
@@ -322,19 +341,20 @@ func getS3ConfigHandler(c *gin.Context) {
 // @Produce      json
 // @Success      200  {object}  map[string]interface{}
 // @Router       /instances [get]
-func getInstancesHandler(c *gin.Context) {
+func GetInstancesHandler(c *gin.Context) {
+	cfg := config.GetConfig()
 	instances := gin.H{
 		"aliyun": make([]string, 0),
 		"aws":    make([]string, 0),
 	}
 
 	// 获取阿里云实例列表
-	for env := range configs.RDS.Aliyun.Instances {
+	for env := range cfg.RDS.Aliyun.Instances {
 		instances["aliyun"] = append(instances["aliyun"].([]string), env)
 	}
 
 	// 获取AWS实例列表
-	for env := range configs.RDS.Aws.Instances {
+	for env := range cfg.RDS.Aws.Instances {
 		instances["aws"] = append(instances["aws"].([]string), env)
 	}
 

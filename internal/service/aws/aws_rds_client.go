@@ -1,18 +1,19 @@
-// aws_rds_client.go
-package main
+// Package aws provides AWS RDS and S3 related operations for backup management
+package aws
 
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"log"
-	"os"
-	"strings"
-	"time"
 )
 
 // createAWSClient 创建 RDS 客户端
@@ -40,8 +41,8 @@ func createAWSClient(region string) (*rds.Client, error) {
 	return rds.NewFromConfig(cfg), nil
 }
 
-// startRDSSnapshotExport 启动 RDS 快照导出任务
-func startRDSSnapshotExport(
+// StartRDSSnapshotExport 启动 RDS 快照导出任务
+func StartRDSSnapshotExport(
 	instanceID string,
 	snapshotArn string,
 	region string,
@@ -95,8 +96,8 @@ func startRDSSnapshotExport(
 	return aws.ToString(result.ExportTaskIdentifier), nil
 }
 
-// getLatestSnapshotInfo 获取最新的 AWS RDS 快照信息
-func getLatestSnapshotInfo(instanceID string, region string) (map[string]string, error) {
+// GetLatestSnapshotInfo 获取最新的 AWS RDS 快照信息
+func GetLatestSnapshotInfo(instanceID string, region string) (map[string]string, error) {
 	log.Printf("Creating AWS RDS client for region: %s", region)
 	client, err := createAWSClient(region)
 	log.Printf("getLatestSnapshotInfo AWS get config err:%s", err)
@@ -120,17 +121,11 @@ func getLatestSnapshotInfo(instanceID string, region string) (map[string]string,
 	}
 
 	// 打印调试信息
-	log.Printf("Found %d snapshots for instance %s", len(resp.DBSnapshots), instanceID)
+	//log.Printf("Found %d snapshots for instance %s", len(resp.DBSnapshots), instanceID)
 
 	// 获取最新快照
 	var latestSnapshot *types.DBSnapshot
-	for i, snapshot := range resp.DBSnapshots {
-		log.Printf("Snapshot %d: ID=%s, Status=%s, Time=%s",
-			i+1,
-			aws.ToString(snapshot.DBSnapshotIdentifier),
-			aws.ToString(snapshot.Status),
-			snapshot.SnapshotCreateTime.String())
-
+	for _, snapshot := range resp.DBSnapshots {
 		if snapshot.Status != nil && *snapshot.Status == "available" {
 			if latestSnapshot == nil || snapshot.SnapshotCreateTime.After(*latestSnapshot.SnapshotCreateTime) {
 				latestSnapshot = &snapshot

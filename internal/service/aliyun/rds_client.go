@@ -1,13 +1,14 @@
 // rds_client.go
-package main
+package aliyun
 
 import (
 	"fmt"
+	"os"
+
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	rds20140815 "github.com/alibabacloud-go/rds-20140815/v8/client"
 	util "github.com/alibabacloud-go/tea-utils/v2/service"
 	"github.com/alibabacloud-go/tea/tea"
-	"os"
 )
 
 // CreateClient 创建 RDS 客户端
@@ -27,8 +28,8 @@ func CreateClient() (*rds20140815.Client, error) {
 	return rds20140815.NewClient(config)
 }
 
-// getLastBackupURLs 获取最新备份文件的下载链接，包括内网和公网
-func getLastBackupURLs(instanceID string) (map[string]string, error) {
+// GetLastBackupURLs 获取最新备份文件的下载链接，包括内网和公网
+func GetLastBackupURLs(instanceID string) (map[string]string, error) {
 	client, err := CreateClient()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create RDS client: %v", err)

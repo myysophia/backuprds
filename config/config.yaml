@@ -26,32 +26,32 @@ rds:
       vnnox-us-db:
         id: "rm-rj934t1rmdn12j04m"
         region: "us-east-1"
-    s3_export:
+    s3export:
       region: "ap-southeast-2"
-      bucket_name: "alirds-backup"
+      bucketname: "alirds-backup"
   aws:
     instances:
       au-mysql8-care:
         id: "arn:aws:rds:ap-southeast-2:059012766390:db:mysql8-care"
         region: "ap-southeast-2"
-        kms_key_id: "22584e80-f470-4c1a-9998-7e84cccf2b01"
-        s3_bucket_name: "novacloud-devops"
+        kmsKeyId: "22584e80-f470-4c1a-9998-7e84cccf2b01"
+        s3BucketName: "novacloud-devops"
       au-mysql8-vnnox:
         id: "arn:aws:rds:ap-southeast-2:059012766390:db:mysql8-vnnox"
         region: "ap-southeast-2"
-        kms_key_id: "22584e80-f470-4c1a-9998-7e84cccf2b01"
-        s3_bucket_name: "novacloud-devops"
+        kmsKeyId: "22584e80-f470-4c1a-9998-7e84cccf2b01"
+        s3BucketName: "novacloud-devops"
       in-care-mysql:
         id: "arn:aws:rds:ap-south-1:059012766390:db:care-mysql-in"
         region: "ap-south-1"
-        kms_key_id: "f76dbe99-7364-48b6-888d-4ac9f1b4ae87"
-        s3_bucket_name: "in-novacloud-backup"
+        kmsKeyId: "f76dbe99-7364-48b6-888d-4ac9f1b4ae87"
+        s3BucketName: "in-novacloud-backup"
       in-vnnox-mysql:
         id: "arn:aws:rds:ap-south-1:059012766390:db:vnnox-in"
         region: "ap-south-1"
-        kms_key_id: "f76dbe99-7364-48b6-888d-4ac9f1b4ae87"
-        s3_bucket_name: "in-novacloud-backup"
-    export_task:
-      s3_prefix: "mysql"
-      iam_role_arn: "arn:aws:iam::059012766390:role/rds-s3-export-role"
-      export_task_identifier_prefix: "snapshot-export"
+        kmsKeyId: "f76dbe99-7364-48b6-888d-4ac9f1b4ae87"
+        s3BucketName: "in-novacloud-backup"
+    exporttask:
+      s3prefix: "mysql"
+      iamRoleArn: "arn:aws:iam::059012766390:role/rds-s3-export-role"
+      exportTaskIdentifierPrefix: "snapshot-export"

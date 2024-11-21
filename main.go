@@ -1,12 +1,10 @@
-// main.go
 package main
 
 import (
+	"backuprds/cmd"
 	_ "backuprds/docs"
-
-	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"fmt"
+	"os"
 )
 
 // @title        Nova RDS 跨云灾备系统 API
@@ -15,29 +13,8 @@ import (
 // @BasePath     /
 
 func main() {
-	loadConfig()
-
-	r := gin.Default()
-
-	// 静态文件
-	r.Static("/static", "./static")
-
-	// Swagger
-	r.GET("/doc/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	// API 路由
-	r.GET("/alirds/:env", backupHandler)
-	r.POST("/alirds/export/s3/:env", aliRDSExportToS3Handler)
-	r.GET("/alirds/s3config", getS3ConfigHandler)
-	r.GET("/awsrds/:env", awsBackupHandler)
-	r.POST("/awsrds/export/:env", awsExportHandler)
-	r.GET("/health", healthCheckHandler)
-	r.GET("/instances", getInstancesHandler)
-
-	// 前端路由
-	r.GET("/", func(c *gin.Context) {
-		c.File("./static/index.html")
-	})
-
-	r.Run(":8080")
+	if err := cmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

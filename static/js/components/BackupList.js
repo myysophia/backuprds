@@ -189,7 +189,7 @@ function BackupList() {
                 message.success('导出任务已启动');
                 message.info(`备份将上传至 ${data.s3_bucket} (${data.region})`);
             } else {
-                message.error('导出失败：' + data.error);
+                message.error('导出失败���' + data.error);
             }
         } catch (error) {
             console.error('导出到S3出错：', error);
@@ -397,6 +397,20 @@ function BackupList() {
         }
     };
 
+    // 注释掉轮询启动代码
+    // useEffect(() => {
+    //     startPolling();
+    // }, []);
+
+    // 在组件卸载时清理轮询
+    React.useEffect(() => {
+        return () => {
+            if (polling) {
+                setPolling(false);
+            }
+        };
+    }, []);
+
     // 修改 AWS 快照导出函数
     const handleExportAwsSnapshot = async (record) => {
         try {
@@ -488,15 +502,6 @@ function BackupList() {
             });
         }
     };
-
-    // 在组件卸载时清理轮询
-    React.useEffect(() => {
-        return () => {
-            if (polling) {
-                setPolling(false);
-            }
-        };
-    }, []);
 
     // 添加表格配置
     const tableProps = {
