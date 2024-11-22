@@ -18,7 +18,7 @@ type Config struct {
 			Instances  map[string]InstanceConfig `yaml:"instances"`
 			ExportTask struct {
 				S3Prefix                   string `yaml:"s3prefix"`
-				IamRoleArn                 string `yaml:"iam_role_arn"`
+				IamRoleArn                 string `yaml:"iamRoleArn"`
 				ExportTaskIdentifierPrefix string `yaml:"exportTaskIdentifierPrefix"`
 			} `yaml:"exporttask"`
 		} `yaml:"aws"`

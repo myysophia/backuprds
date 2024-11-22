@@ -1,5 +1,5 @@
 level: "info"              # 默认日志级别
-format: "json"            # 日志格式 (json/text)
+format: "text"            # 日志格式 (json/text)
 output:
   console: true           # 是否输出到控制台
   files:                  # 文件输出配置
