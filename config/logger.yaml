@@ -1,0 +1,25 @@
+level: "info"              # 默认日志级别
+format: "json"            # 日志格式 (json/text)
+output:
+  console: true           # 是否输出到控制台
+  files:                  # 文件输出配置
+    - level: "debug"
+      path: "logs/debug.log"
+      max_size: 100       # MB
+      max_age: 7          # 天
+      max_backups: 10     # 保留的旧文件个数
+    - level: "info"
+      path: "logs/info.log"
+      max_size: 100
+      max_age: 7
+      max_backups: 10
+    - level: "error"
+      path: "logs/error.log"
+      max_size: 100
+      max_age: 7
+      max_backups: 10
+hooks:
+  wecom:                  # 企业微信告警配置
+    enabled: true
+    levels: ["error", "fatal"]
+    webhook_url: "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=682ca8af-3592-413f-9b58-a72b3d877cee"

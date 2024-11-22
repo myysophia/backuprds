@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backuprds/internal/logger"
 	"log"
 	"net/http"
 	"time"
@@ -31,21 +32,30 @@ const (
 // @Router       /alirds/{env} [get]
 func BackupHandler(c *gin.Context) {
 	env := c.Param("env")
-	cfg := config.GetConfig()
+	logger.LogInfo("Received backup request",
+		logger.String("env", env),
+		logger.String("client_ip", c.ClientIP()))
 
-	// 根据环境参数获取实例 ID
+	cfg := config.GetConfig()
 	instanceID, ok := cfg.RDS.Aliyun.Instances[env]
 	if !ok {
+		logger.LogWarn("Invalid environment requested",
+			logger.String("env", env),
+			logger.String("client_ip", c.ClientIP()))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid environment"})
 		return
 	}
 
-	// 添加重试逻辑
 	var backupURLs map[string]string
 	var err error
 	var lastErr error
 
 	for i := 0; i < maxRetries; i++ {
+		logger.LogInfo("Attempting to get backup URLs",
+			logger.String("env", env),
+			logger.Int("attempt", i+1),
+			logger.Int("max_retries", maxRetries))
+
 		backupURLs, err = aliyun.GetLastBackupURLs(instanceID.ID)
 		if err != nil {
 			lastErr = err
@@ -312,11 +322,14 @@ func GetS3ConfigHandler(c *gin.Context) {
 	s3Config := cfg.RDS.Aliyun.S3Export
 
 	// 添加调试日志
-	log.Printf("S3 Config - Region: %s, BucketName: %s", s3Config.Region, s3Config.BucketName)
+	logger.LogInfo("S3 configuration",
+		logger.String("region", s3Config.Region),
+		logger.String("bucket_name", s3Config.BucketName))
 
 	if s3Config.Region == "" || s3Config.BucketName == "" {
-		log.Printf("S3 configuration is missing - Region: %q, BucketName: %q",
-			s3Config.Region, s3Config.BucketName)
+		logger.LogError("S3 configuration is missing",
+			logger.String("region", s3Config.Region),
+			logger.String("bucket_name", s3Config.BucketName))
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "S3 configuration is missing",
 			"details": map[string]string{

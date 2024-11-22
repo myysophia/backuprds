@@ -2,9 +2,9 @@
 package aws
 
 import (
+	"backuprds/internal/logger"
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -86,7 +86,8 @@ func StartRDSSnapshotExport(
 		SourceArn:            aws.String(snapshotArn),
 	}
 
-	log.Printf("Starting export task with params: %+v", input)
+	logger.LogInfo("Starting export task",
+		logger.Any("params", input))
 
 	result, err := client.StartExportTask(context.TODO(), input)
 	if err != nil {
@@ -98,21 +99,29 @@ func StartRDSSnapshotExport(
 
 // GetLatestSnapshotInfo 获取最新的 AWS RDS 快照信息
 func GetLatestSnapshotInfo(instanceID string, region string) (map[string]string, error) {
-	log.Printf("Creating AWS RDS client for region: %s", region)
+	logger.LogInfo("Fetching latest snapshot info",
+		logger.String("instance_id", instanceID),
+		logger.String("region", region))
+
 	client, err := createAWSClient(region)
-	log.Printf("getLatestSnapshotInfo AWS get config err:%s", err)
 	if err != nil {
-		return nil, fmt.Errorf("getLatestSnapshotInfo funcation failed to create AWS RDS client: %v", err)
+		logger.LogError("Failed to create AWS client",
+			logger.Error(err),
+			logger.String("region", region))
+		return nil, fmt.Errorf("failed to create AWS RDS client: %v", err)
 	}
 
-	// 调用 DescribeDBSnapshots API，添加更多过滤条件
 	input := &rds.DescribeDBSnapshotsInput{
 		DBInstanceIdentifier: aws.String(instanceID),
-		SnapshotType:         aws.String("automated"), // 修改为 "automated" 获取自动快照
-		MaxRecords:           aws.Int32(20),           // 限制返回记录数
-		IncludeShared:        aws.Bool(true),          // 包含共享快照
-		IncludePublic:        aws.Bool(true),          // 包含公共快照
+		SnapshotType:         aws.String("automated"),
+		MaxRecords:           aws.Int32(20),
+		IncludeShared:        aws.Bool(true),
+		IncludePublic:        aws.Bool(true),
 	}
+
+	logger.LogDebug("Describing DB snapshots",
+		logger.String("instance_id", instanceID),
+		logger.Any("input", input))
 
 	resp, err := client.DescribeDBSnapshots(context.TODO(), input)
 	if err != nil {
@@ -120,8 +129,9 @@ func GetLatestSnapshotInfo(instanceID string, region string) (map[string]string,
 		return nil, fmt.Errorf("failed to describe DB snapshots: %v (instanceID: %s)", err, instanceID)
 	}
 
-	// 打印调试信息
-	//log.Printf("Found %d snapshots for instance %s", len(resp.DBSnapshots), instanceID)
+	logger.LogDebug("Found snapshots",
+		logger.Int("count", len(resp.DBSnapshots)),
+		logger.String("instance_id", instanceID))
 
 	// 获取最新快照
 	var latestSnapshot *types.DBSnapshot
@@ -134,7 +144,8 @@ func GetLatestSnapshotInfo(instanceID string, region string) (map[string]string,
 	}
 
 	if latestSnapshot == nil {
-		log.Printf("No available snapshots found for instance %s", instanceID)
+		logger.LogWarn("No available snapshots found",
+			logger.String("instance_id", instanceID))
 		return map[string]string{
 			"SnapshotArn":        "",
 			"SnapshotCreateTime": "",

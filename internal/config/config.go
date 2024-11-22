@@ -1,8 +1,7 @@
 package config
 
 import (
-	"log"
-
+	"backuprds/internal/logger"
 	"github.com/spf13/viper"
 )
 
@@ -36,25 +35,24 @@ type InstanceConfig struct {
 var Cfg Config
 
 func LoadConfig() {
+	logger.LogInfo("Loading configuration")
+
 	viper.BindEnv("rds.aliyun.s3export.region")
 	viper.BindEnv("rds.aliyun.s3export.bucketname")
 
-	viper.SetDefault("rds.aliyun.s3export.region", "ap-southeast-2")
-	viper.SetDefault("rds.aliyun.s3export.bucketname", "alirds-backup")
-
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config file: %v", err)
+		logger.LogFatal("Failed to read config file",
+			logger.Error(err))
 	}
 
 	if err := viper.Unmarshal(&Cfg); err != nil {
-		log.Fatalf("Error unmarshaling config: %v", err)
+		logger.LogFatal("Failed to unmarshal config",
+			logger.Error(err))
 	}
 
-	if Cfg.RDS.Aliyun.S3Export.Region == "" || Cfg.RDS.Aliyun.S3Export.BucketName == "" {
-		log.Printf("Warning: S3 export configuration is incomplete - Region: %q, BucketName: %q",
-			Cfg.RDS.Aliyun.S3Export.Region,
-			Cfg.RDS.Aliyun.S3Export.BucketName)
-	}
+	logger.LogInfo("Configuration loaded successfully",
+		logger.String("aliyun_region", Cfg.RDS.Aliyun.S3Export.Region),
+		logger.String("aliyun_bucket", Cfg.RDS.Aliyun.S3Export.BucketName))
 }
 
 func GetConfig() *Config {

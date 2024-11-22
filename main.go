@@ -3,6 +3,7 @@ package main
 import (
 	"backuprds/cmd"
 	_ "backuprds/docs"
+	"backuprds/internal/logger"
 	"fmt"
 	"os"
 )
@@ -13,8 +14,19 @@ import (
 // @BasePath     /
 
 func main() {
+	// 初始化日志
+	if err := logger.InitFromFile("config/logger.yaml"); err != nil {
+		fmt.Printf("Failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 测试日志
+	logger.LogInfo("Application starting",
+		logger.String("app", "backuprds"),
+		logger.String("version", "1.0"))
+
 	if err := cmd.Execute(); err != nil {
-		fmt.Println(err)
+		logger.LogError("Failed to execute command", logger.Error(err))
 		os.Exit(1)
 	}
 }

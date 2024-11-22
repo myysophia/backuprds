@@ -1,9 +1,9 @@
 package aws
 
 import (
+	"backuprds/internal/logger"
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -26,7 +26,8 @@ func UploadBackupToS3(backupURL, bucketName, region, env, backupTime string) (*U
 	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
 
 	if accessKey == "" || secretKey == "" {
-		log.Println("Missing AWS credentials")
+		logger.LogError("Missing AWS credentials",
+			logger.String("service", "s3_uploader"))
 		return nil, fmt.Errorf("missing required environment variables: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY")
 	}
 
@@ -40,7 +41,9 @@ func UploadBackupToS3(backupURL, bucketName, region, env, backupTime string) (*U
 		)),
 	)
 	if err != nil {
-		log.Printf("Failed to load AWS SDK config: %v", err)
+		logger.LogError("Failed to load AWS SDK config",
+			logger.Error(err),
+			logger.String("region", region))
 		return nil, fmt.Errorf("unable to load SDK config: %v", err)
 	}
 
@@ -49,16 +52,24 @@ func UploadBackupToS3(backupURL, bucketName, region, env, backupTime string) (*U
 	uploader := manager.NewUploader(s3Client)
 
 	// 下载备份文件
-	log.Printf("Starting download from URL: %s", backupURL)
+	logger.LogInfo("Starting backup download",
+		logger.String("url", backupURL),
+		logger.String("bucket", bucketName),
+		logger.String("region", region),
+		logger.String("env", env))
 	resp, err := http.Get(backupURL)
 	if err != nil {
-		log.Printf("Failed to download backup: %v", err)
+		logger.LogError("Failed to download backup",
+			logger.Error(err),
+			logger.String("url", backupURL))
 		return nil, fmt.Errorf("failed to download backup: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("Non-OK HTTP status while downloading: %d", resp.StatusCode)
+		logger.LogError("Non-OK HTTP status while downloading",
+			logger.Int("status_code", resp.StatusCode),
+			logger.String("url", backupURL))
 		return nil, fmt.Errorf("failed to download backup, status code: %d", resp.StatusCode)
 	}
 
@@ -67,18 +78,25 @@ func UploadBackupToS3(backupURL, bucketName, region, env, backupTime string) (*U
 	s3Key := path.Join(env, fmt.Sprintf("backup-%s-%s.xb", env, timestamp))
 
 	// 上传到S3
-	log.Printf("Starting upload to S3: bucket=%s, key=%s", bucketName, s3Key)
+	logger.LogInfo("Starting upload to S3",
+		logger.String("bucket", bucketName),
+		logger.String("key", s3Key),
+		logger.String("region", region))
 	result, err := uploader.Upload(context.TODO(), &s3.PutObjectInput{
 		Bucket: &bucketName,
 		Key:    &s3Key,
 		Body:   resp.Body,
 	})
 	if err != nil {
-		log.Printf("Failed to upload to S3: %v", err)
+		logger.LogError("Failed to upload to S3",
+			logger.Error(err),
+			logger.String("bucket", bucketName),
+			logger.String("key", s3Key))
 		return nil, fmt.Errorf("failed to upload to S3: %v", err)
 	}
 
-	log.Printf("Upload successful: %s", result.Location)
+	logger.LogInfo("Upload completed successfully",
+		logger.String("location", result.Location))
 	return &UploadResult{
 		S3Key:    s3Key,
 		Location: result.Location,

@@ -17,11 +17,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.89.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.3
 	github.com/gin-gonic/gin v1.10.0
+	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.4
+	go.uber.org/zap v1.21.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -33,7 +35,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.4 // indirect
 	github.com/aws/smithy-go v1.22.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/spec v0.21.0 // indirect
@@ -55,6 +56,7 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/tools v0.27.0 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 )
 
 require (
