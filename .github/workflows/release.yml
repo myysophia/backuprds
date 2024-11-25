@@ -67,6 +67,7 @@ jobs:
           configuration: ".github/changelog-config.json"
         env:
           GITHUB_TOKEN: ${{ secrets.MYGITHUB_TOKEN }}
+        continue-on-error: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
