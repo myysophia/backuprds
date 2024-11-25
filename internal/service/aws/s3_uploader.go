@@ -49,7 +49,14 @@ func UploadBackupToS3(backupURL, bucketName, region, env, backupTime string) (*U
 
 	// 创建S3客户端
 	s3Client := s3.NewFromConfig(cfg)
-	uploader := manager.NewUploader(s3Client)
+	uploader := manager.NewUploader(s3Client, func(u *manager.Uploader) {
+		// 设置分片大小为 100MB
+		u.PartSize = 200 * 1024 * 1024
+		// 设置并发数
+		u.Concurrency = 10
+		// 启用分片上传
+		u.LeavePartsOnError = false
+	})
 
 	// 下载备份文件
 	logger.LogInfo("Starting backup download",

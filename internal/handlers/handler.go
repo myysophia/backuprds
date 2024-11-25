@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	maxRetries = 1
-	retryDelay = 2 * time.Second
+	maxRetries = 3
+	retryDelay = 3 * time.Second
 )
 
 // BackupHandler godoc
