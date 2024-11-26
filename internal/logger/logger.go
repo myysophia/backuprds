@@ -158,11 +158,6 @@ func InitFromFile(configPath string) error {
 	// 使用选项创建logger
 	logger = zap.New(core, opts...)
 
-	// 初始化完成后打印一条日志
-	LogInfo("Logger initialized successfully",
-		String("level", cfg.Level),
-		String("format", cfg.Format))
-
 	return nil
 }
 
