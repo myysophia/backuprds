@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -61,6 +60,11 @@ func Any(key string, value interface{}) Field {
 	return zap.Any(key, value)
 }
 
+// 添加日志级别检查函数
+func isLevelEnabled(lvl zapcore.Level) bool {
+	return level.Enabled(lvl)
+}
+
 // InitFromFile 从配置文件初始化日志系统
 func InitFromFile(configPath string) error {
 	// 读取配置文件
@@ -91,13 +95,27 @@ func InitFromFile(configPath string) error {
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
-	// 创建原子级别
+	// 确保日志级别正确设置
 	level = zap.NewAtomicLevel()
-	if err := level.UnmarshalText([]byte(cfg.Level)); err != nil {
-		return fmt.Errorf("invalid log level: %v", err)
+	logLevel := strings.ToLower(cfg.Level)
+
+	// 验证日志级别
+	switch logLevel {
+	case "debug":
+		level.SetLevel(zapcore.DebugLevel)
+	case "info":
+		level.SetLevel(zapcore.InfoLevel)
+	case "warn":
+		level.SetLevel(zapcore.WarnLevel)
+	case "error":
+		level.SetLevel(zapcore.ErrorLevel)
+	case "fatal":
+		level.SetLevel(zapcore.FatalLevel)
+	default:
+		return fmt.Errorf("invalid log level: %s", cfg.Level)
 	}
 
-	// 创建输出
+	// 创建核心日志组件
 	var cores []zapcore.Core
 
 	// 控制台输出
@@ -113,16 +131,6 @@ func InitFromFile(configPath string) error {
 
 	// 文件输出
 	for _, fc := range cfg.Output.Files {
-		fileLevel := zap.NewAtomicLevel()
-		if err := fileLevel.UnmarshalText([]byte(fc.Level)); err != nil {
-			return fmt.Errorf("invalid file log level: %v", err)
-		}
-
-		// 确保日志目录存在
-		if err := os.MkdirAll(filepath.Dir(fc.Path), 0755); err != nil {
-			return fmt.Errorf("failed to create log directory: %v", err)
-		}
-
 		fileEncoder := getEncoder(cfg.Format, encoderConfig)
 		writer := zapcore.AddSync(&lumberjack.Logger{
 			Filename:   fc.Path,
@@ -134,7 +142,7 @@ func InitFromFile(configPath string) error {
 		fileCore := zapcore.NewCore(
 			fileEncoder,
 			writer,
-			fileLevel,
+			level, // 使用相同的全局级别
 		)
 		cores = append(cores, fileCore)
 	}
@@ -237,4 +245,28 @@ func LogFatal(msg string, fields ...Field) {
 	}
 	msg, newFields := addCallerInfo(msg, fields)
 	logger.Fatal(msg, newFields...)
+}
+
+// 添加获取当前日志级别的方法
+func GetLogLevel() string {
+	return level.String()
+}
+
+// 添加动态修改日志级别的方法
+func SetLogLevel(logLevel string) error {
+	switch strings.ToLower(logLevel) {
+	case "debug":
+		level.SetLevel(zapcore.DebugLevel)
+	case "info":
+		level.SetLevel(zapcore.InfoLevel)
+	case "warn":
+		level.SetLevel(zapcore.WarnLevel)
+	case "error":
+		level.SetLevel(zapcore.ErrorLevel)
+	case "fatal":
+		level.SetLevel(zapcore.FatalLevel)
+	default:
+		return fmt.Errorf("invalid log level: %s", logLevel)
+	}
+	return nil
 }
