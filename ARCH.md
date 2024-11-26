@@ -3,7 +3,6 @@
 
 
 ```mermaid
-
 graph TD
     subgraph Client[客户端层]
         Browser[浏览器]
@@ -33,16 +32,30 @@ graph TD
 
     subgraph Services[服务层]
         direction LR
-        subgraph AliyunService[阿里云服务]
-            GetBackupURLs[获取备份链接]
-            UploadToS3[上传至S3]
-            ValidateBackup[备份验证]
+        subgraph AliyunService[阿里云RDS SDK]
+            GetBackupURLs[获取backupURL]
+            UploadToS3[分片上传至S3]
         end
-        subgraph AWSService[AWS服务]
+        subgraph AWSService[AWS RDS SDK]
             GetSnapshot[获取快照]
             ExportSnapshot[导出快照]
-            ValidateSnapshot[快照验证]
         end
+    end
+
+    subgraph Storage[存储层]
+        S3[AWS S3]
+        subgraph S3Paths[S3目录]
+            MySQLPath[mysql]
+        end
+        OSS[阿里云OSS]
+        subgraph OSSPaths[OSS目录]
+            IOTDBPath[iotdb-backup/mysql]
+        end
+    end
+
+    subgraph Sync[实时同步]
+        Lambda[AWS Lambda]
+        S3Trigger[S3事件触发器]
     end
 
     subgraph AlertSystem[告警系统]
@@ -52,9 +65,8 @@ graph TD
     end
 
     subgraph Config[配置管理]
-        ConfigLoader[ viper 配置解析模块 ]
-        Logger[ Zap日志模块 ]
-    
+        ConfigLoader[viper配置解析模块]
+        Logger[Zap日志模块]
     end
 
     Browser -->|HTTP请求| GinEngine
@@ -82,10 +94,17 @@ graph TD
     Services -->|记录日志| Logger
     Handlers -->|记录日志| Logger
 
+    ExportSnapshot -->|导出| S3
+    S3 -->|监听/mysql| S3Trigger
+    S3Trigger -->|触发| Lambda
+    Lambda -->|同步| OSS
+
     classDef client fill:#f9f,stroke:#333,stroke-width:2px
     classDef server fill:#ccf,stroke:#333,stroke-width:2px
     classDef handler fill:#cfc,stroke:#333,stroke-width:2px
     classDef service fill:#fcf,stroke:#333,stroke-width:2px
+    classDef storage fill:#fdf,stroke:#333,stroke-width:2px
+    classDef sync fill:#dff,stroke:#333,stroke-width:2px
     classDef alert fill:#ffc,stroke:#333,stroke-width:2px
     classDef config fill:#cff,stroke:#333,stroke-width:2px
     
@@ -93,8 +112,11 @@ graph TD
     class GinEngine,Swagger server
     class AliBackupHandler,AliExportHandler,AwsBackupHandler,AwsExportHandler,HealthHandler,ConfigHandler handler
     class GetBackupURLs,UploadToS3,GetSnapshot,ExportSnapshot,ValidateBackup,ValidateSnapshot service
+    class S3,OSS,MySQLPath,IOTDBPath storage
+    class Lambda,S3Trigger sync
     class AlertHandler,AlertRules,WeworkBot alert
     class ConfigLoader,Logger config
+
 ```
 
 
