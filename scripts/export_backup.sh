@@ -115,22 +115,33 @@ EOF
 export_aliyun_backup() {
     local env=$1
     local failed=0
+    local retry_count=0
+    local max_retries=3
     
-    log "开始导出阿里云 RDS 备份到 S3 (环境: $env)"
-    local http_code
-    response=$(curl -s -w "%{http_code}" -X POST "${API_HOST}/alirds/export/s3/${env}")
-    http_code=${response: -3}
-    response=${response:0:-3}
-    
-    if check_response "$response" "$http_code" "阿里云 RDS -> S3"; then
-        local download_url=$(echo $response | jq -r '.data.backup_download_url')
-        ALIYUN_RESULTS="${ALIYUN_RESULTS}\n- ✅ ${env}: [查看备份文件](${download_url})"
-        log "✅ ${env} 环境备份导出成功"
-    else
-        ALIYUN_RESULTS="${ALIYUN_RESULTS}\n- ❌ ${env}: 导出失败"
-        log "❌ ${env} 环境备份导出失败"
-        failed=1
-    fi
+    while [ $retry_count -lt $max_retries ]; do
+        log "开始导出阿里云 RDS 备份到 S3 (环境: $env, 尝试次数: $((retry_count + 1)))"
+        local http_code
+        response=$(curl -s -w "%{http_code}" -X POST "${API_HOST}/alirds/export/s3/${env}")
+        http_code=${response: -3}
+        response=${response:0:-3}
+        
+        if check_response "$response" "$http_code" "阿里云 RDS -> S3"; then
+            local download_url=$(echo $response | jq -r '.data.backup_download_url')
+            ALIYUN_RESULTS="${ALIYUN_RESULTS}\n- ✅ ${env}: [查看备份文件](${download_url})"
+            log "✅ ${env} 环境备份导出成功"
+            return 0
+        else
+            ((retry_count++))
+            if [ $retry_count -lt $max_retries ]; then
+                log "⚠️ ${env} 环境备份导出失败，${retry_count}/${max_retries} 次尝试，等待 60 秒后重试..."
+                sleep 60
+            else
+                ALIYUN_RESULTS="${ALIYUN_RESULTS}\n- ❌ ${env}: 导出失败 (已重试 ${retry_count} 次)"
+                log "❌ ${env} 环境备份导出失败 (已重试 ${retry_count} 次)"
+                failed=1
+            fi
+        fi
+    done
     
     return $failed
 }
@@ -139,22 +150,33 @@ export_aws_backup() {
     local env=$1
     local bucket=${AWS_BUCKET_MAP[$env]}
     local failed=0
+    local retry_count=0
+    local max_retries=3
     
-    log "开始导出 AWS RDS 备份 (环境: $env)"
-    local http_code
-    response=$(curl -s -w "%{http_code}" -X POST "${API_HOST}/awsrds/export/${env}")
-    http_code=${response: -3}
-    response=${response:0:-3}
-    
-    if check_response "$response" "$http_code" "AWS RDS"; then
-        local s3_link=$(generate_aws_s3_link "$env")
-        AWS_RESULTS="${AWS_RESULTS}\n- ✅ ${env} (${bucket}): [查看备份文件](${s3_link})"
-        log "✅ ${env} 环境备份导出成功"
-    else
-        AWS_RESULTS="${AWS_RESULTS}\n- ❌ ${env} (${bucket}): 导出失败"
-        log "❌ ${env} 环境备份导出失败"
-        failed=1
-    fi
+    while [ $retry_count -lt $max_retries ]; do
+        log "开始导出 AWS RDS 备份 (环境: $env, 尝试次数: $((retry_count + 1)))"
+        local http_code
+        response=$(curl -s -w "%{http_code}" -X POST "${API_HOST}/awsrds/export/${env}")
+        http_code=${response: -3}
+        response=${response:0:-3}
+        
+        if check_response "$response" "$http_code" "AWS RDS"; then
+            local s3_link=$(generate_aws_s3_link "$env")
+            AWS_RESULTS="${AWS_RESULTS}\n- ✅ ${env} (${bucket}): [查看备份文件](${s3_link})"
+            log "✅ ${env} 环境备份导出成功"
+            return 0
+        else
+            ((retry_count++))
+            if [ $retry_count -lt $max_retries ]; then
+                log "⚠️ ${env} 环境备份导出失败，${retry_count}/${max_retries} 次尝试，等待 60 秒后重试..."
+                sleep 60
+            else
+                AWS_RESULTS="${AWS_RESULTS}\n- ❌ ${env} (${bucket}): 导出失败 (已重试 ${retry_count} 次)"
+                log "❌ ${env} 环境备份导出失败 (已重试 ${retry_count} 次)"
+                failed=1
+            fi
+        fi
+    done
     
     return $failed
 }
