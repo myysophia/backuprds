@@ -196,7 +196,7 @@ hooks:
   wecom:                  # 企业微信告警配置
     enabled: true
     levels: ["error", "fatal"]
-    webhook_url: "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=682ca8af-3592-413f-9b58-a72b3d877cee"
+    webhook_url: "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=XXXXX"
 ```
 
 
